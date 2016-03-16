@@ -1,6 +1,8 @@
 # VersionConnector
 Bungee plugin to connect different Minecraft client versions to different servers on join.
 
+Development builds can be found on the [Minebench](https://www.minebench.de) Jenkins as usual: http://ci.minebench.de/job/VersionConnector/
+
 ## Versions directly supported:
 
 It will fallback to the version with the closest protocol number below the actuall client's protocol. You can however set the protocol version directly if you want or submit additions to the [ProtocolVersion](https://github.com/Minebench/VersionConnector/blob/master/src/main/java/de/themoep/versionconnector/ProtocolVersion.java) enum.
