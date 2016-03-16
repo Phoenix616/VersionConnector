@@ -1,0 +1,5 @@
+#versions:
+#  '34': lobby_for_that_old_version
+#  MINECRAFT_1_8: lobby_1_8
+#  MINECRAFT_1_9: lobby_1_9
+#  UNKNOWN: well_we_dont_know

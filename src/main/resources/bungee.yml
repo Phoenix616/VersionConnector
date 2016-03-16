@@ -1,0 +1,4 @@
+name: VersionConnector
+main: de.themoep.versionconnector.VersionConnector
+version: '${minecraft.plugin.version}'
+author: Phoenix616
