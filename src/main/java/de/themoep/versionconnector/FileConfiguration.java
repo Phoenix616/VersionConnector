@@ -45,11 +45,11 @@ public class FileConfiguration  {
     /**
      * FileConfiguration represents a configuration saved in a yml file
      * @param plugin The bungee plugin of the config
-     * @param path The path to the yml file
+     * @param path The path to the yml file with the plugin's datafolder as the parent
      * @throws IOException
      */
     public FileConfiguration(Plugin plugin, String path) throws IOException {
-        this(plugin, new File(path));
+        this(plugin, new File(plugin.getDataFolder(), path));
     }
 
     /**

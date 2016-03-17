@@ -43,7 +43,7 @@ public class VersionConnector extends Plugin implements Listener {
 
     public void onEnable() {
         try {
-            config = new FileConfiguration(this, new File(getDataFolder(), "config.yml"));
+            config = new FileConfiguration(this, "config.yml");
             enabled = true;
             getProxy().getPluginManager().registerListener(this, this);
         } catch(IOException e) {
