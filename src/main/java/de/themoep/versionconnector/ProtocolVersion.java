@@ -1,7 +1,6 @@
 package de.themoep.versionconnector;
 
 import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * Licensed under the Nietzsche Public License v0.6
