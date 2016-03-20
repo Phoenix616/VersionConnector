@@ -42,13 +42,22 @@ public class VersionConnector extends Plugin implements Listener {
     private boolean enabled = false;
 
     public void onEnable() {
+        enabled = loadConfig();
+        if(enabled) {
+            getProxy().getPluginManager().registerListener(this, this);
+        }
+        getProxy().getPluginManager().registerCommand(this, new VersionConnectorCommand(this));
+    }
+
+    public boolean loadConfig() {
         try {
             config = new FileConfiguration(this, "config.yml");
-            enabled = true;
-            getProxy().getPluginManager().registerListener(this, this);
+            return true;
         } catch(IOException e) {
             getLogger().log(Level.SEVERE, "Can't load plugin config!");
+            e.printStackTrace();
         }
+        return false;
     }
 
     @EventHandler
