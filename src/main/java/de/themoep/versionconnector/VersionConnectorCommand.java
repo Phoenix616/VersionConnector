@@ -51,9 +51,9 @@ public class VersionConnectorCommand extends Command {
         if(args.length > 0) {
             if("check".equalsIgnoreCase(args[0])) {
                 if(args.length == 1) {
-                    sender.sendMessage(ChatColor.AQUA + "Player versions:");
+                    sender.sendMessage(ChatColor.YELLOW + "Player versions:");
                     if(plugin.getProxy().getOnlineCount() == 0) {
-                        sender.sendMessage(ChatColor.YELLOW + "No player online");
+                        sender.sendMessage(ChatColor.RED + "No player online");
                     } else {
                         Map<ProtocolVersion, Integer> versionMap = new HashMap<ProtocolVersion, Integer>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
@@ -67,7 +67,7 @@ public class VersionConnectorCommand extends Command {
 
                         for(ProtocolVersion version : ProtocolVersion.values()) {
                             if(versionMap.containsKey(version)) {
-                                sender.sendMessage(ChatColor.YELLOW + version.toString() + ": " + ChatColor.AQUA + versionMap.get(version));
+                                sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + versionMap.get(version));
                             }
                         }
                     }
@@ -94,17 +94,18 @@ public class VersionConnectorCommand extends Command {
 
                     for(ProxiedPlayer player : players) {
                         ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
-                        sender.sendMessage(ChatColor.YELLOW + player.getName() + ChatColor.AQUA + ": " + version + "/" + version.toInt());
+                        String versionStr = version.toString().replace("MINECRAFT_", "").replace("_", ".");
+                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + version.toInt());
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
-                sender.sendMessage(ChatColor.AQUA + "Current configuration:");
+                sender.sendMessage(ChatColor.YELLOW + "Current configuration:");
                 Configuration versions = plugin.getConfig().getSection("versions");
                 if(versions.getKeys().size() == 0) {
-                    sender.sendMessage(ChatColor.YELLOW + "Nothing configured.");
+                    sender.sendMessage(ChatColor.AQUA + "Nothing configured.");
                 } else {
                     for(String key : versions.getKeys()) {
-                        sender.sendMessage(ChatColor.YELLOW + key + ": " + ChatColor.AQUA + versions.getString(key));
+                        sender.sendMessage(ChatColor.AQUA + key + ": " + ChatColor.YELLOW + versions.getString(key));
                     }
                 }
             } else if("reload".equalsIgnoreCase(args[0])) {
@@ -115,8 +116,8 @@ public class VersionConnectorCommand extends Command {
                 }
             }
         } else {
-            sender.sendMessage(ChatColor.YELLOW + plugin.getDescription().getName() + ChatColor.AQUA + " version " + plugin.getDescription().getVersion());
-            sender.sendMessage(ChatColor.YELLOW + "Usage: " + ChatColor.AQUA + "/vc [check [<player>]|config|reload]");
+            sender.sendMessage(ChatColor.AQUA + plugin.getDescription().getName() + ChatColor.YELLOW + " version " + plugin.getDescription().getVersion());
+            sender.sendMessage(ChatColor.AQUA + "Usage: " + ChatColor.YELLOW + "/vc [check [<player>]|config|reload]");
         }
     }
 }
