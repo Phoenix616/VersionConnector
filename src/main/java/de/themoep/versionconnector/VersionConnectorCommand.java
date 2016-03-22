@@ -50,6 +50,10 @@ public class VersionConnectorCommand extends Command {
     public void execute(CommandSender sender, String[] args) {
         if(args.length > 0) {
             if("check".equalsIgnoreCase(args[0])) {
+                if(!sender.hasPermission(getPermission() + ".check")) {
+                    sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".check");
+                    return;
+                }
                 if(args.length == 1) {
                     sender.sendMessage(ChatColor.YELLOW + "Player versions:");
                     if(plugin.getProxy().getOnlineCount() == 0) {
@@ -74,8 +78,16 @@ public class VersionConnectorCommand extends Command {
                 } else {
                     List<ProxiedPlayer> players = new ArrayList<ProxiedPlayer>();
                     if("-all".equalsIgnoreCase(args[1])) {
+                        if(!sender.hasPermission(getPermission() + ".check.all")) {
+                            sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".check.all");
+                            return;
+                        }
                         players.addAll(plugin.getProxy().getPlayers());
                     } else {
+                        if(!sender.hasPermission(getPermission() + ".check.other")) {
+                            sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".check.other");
+                            return;
+                        }
                         for(int i = 1; i < args.length; i++) {
                             ProxiedPlayer player = plugin.getProxy().getPlayer(args[i]);
                             if(player != null) {
@@ -99,6 +111,10 @@ public class VersionConnectorCommand extends Command {
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
+                if(!sender.hasPermission(getPermission() + ".config")) {
+                    sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".config");
+                    return;
+                }
                 sender.sendMessage(ChatColor.YELLOW + "Current configuration:");
                 Configuration versions = plugin.getConfig().getSection("versions");
                 if(versions.getKeys().size() == 0) {
@@ -109,6 +125,10 @@ public class VersionConnectorCommand extends Command {
                     }
                 }
             } else if("reload".equalsIgnoreCase(args[0])) {
+                if(!sender.hasPermission(getPermission() + ".reload")) {
+                    sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".reload");
+                    return;
+                }
                 if(plugin.loadConfig()) {
                     sender.sendMessage(ChatColor.GREEN + "Config reloaded!");
                 } else {
