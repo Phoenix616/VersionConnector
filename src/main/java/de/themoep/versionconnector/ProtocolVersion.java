@@ -28,6 +28,8 @@ import java.util.Arrays;
  */
 
 public enum ProtocolVersion {
+    MINECRAFT_1_9_2(109),
+    MINECRAFT_1_9_1(108),
     MINECRAFT_1_9(107),
     MINECRAFT_1_8(47),
     MINECRAFT_1_7_6(5),
@@ -52,7 +54,7 @@ public enum ProtocolVersion {
     }
 
     public static ProtocolVersion getVersion(int versionNumber) {
-        if(numbers[versionNumber] != null) {
+        if(numbers.length < versionNumber && numbers[versionNumber] != null) {
             return numbers[versionNumber];
         }
         for(ProtocolVersion version : values()) {
