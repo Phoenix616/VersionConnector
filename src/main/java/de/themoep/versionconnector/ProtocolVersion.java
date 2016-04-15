@@ -40,7 +40,7 @@ public enum ProtocolVersion {
     private static ProtocolVersion[] numbers;
 
     static {
-        numbers = new ProtocolVersion[MINECRAFT_1_9.toInt()];
+        numbers = new ProtocolVersion[MINECRAFT_1_9_2.toInt()];
         for(ProtocolVersion version : values()) {
             if(numbers.length <= version.toInt()) {
                 numbers = Arrays.copyOfRange(numbers, 0, version.toInt() + 2);
@@ -54,11 +54,11 @@ public enum ProtocolVersion {
     }
 
     public static ProtocolVersion getVersion(int versionNumber) {
-        if(numbers.length < versionNumber && numbers[versionNumber] != null) {
+        if(numbers.length > versionNumber && numbers[versionNumber] != null) {
             return numbers[versionNumber];
         }
         for(ProtocolVersion version : values()) {
-            if(version.toInt() < versionNumber) {
+            if(version.toInt() <= versionNumber) {
                 return version;
             }
         }
