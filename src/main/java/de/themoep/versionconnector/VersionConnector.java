@@ -70,16 +70,25 @@ public class VersionConnector extends Plugin implements Listener {
 
         getLogger().log(Level.INFO, e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version);
 
-        String serverName = getConfig().getString("versions." + rawVersion, null);
-        if(serverName == null) {
-            serverName = getConfig().getString("versions." + version, null);
+        String serverList = getConfig().getString("versions." + rawVersion, null);
+        if(serverList == null) {
+            serverList = getConfig().getString("versions." + version, null);
         }
-        if(serverName != null) {
-            ServerInfo server = getProxy().getServerInfo(serverName);
+        if(serverList != null && !serverList.isEmpty()) {
+            String[] serverNames = serverList.split(",");
+            ServerInfo server = null;
+            for(String serverName : serverNames) {
+                ServerInfo testServer = getProxy().getServerInfo(serverName);
+                if(testServer != null) {
+                    if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
+                        server = testServer;
+                    }
+                } else {
+                    getLogger().warning(serverList + " is defined for version " + rawVersion + "/" + version + " but there is no server with that name?");
+                }
+            }
             if(server != null) {
                 e.setTarget(server);
-            } else {
-                getLogger().warning(serverName + " is defined for version " + rawVersion + "/" + version + " but there is no server with that name?");
             }
         }
 
