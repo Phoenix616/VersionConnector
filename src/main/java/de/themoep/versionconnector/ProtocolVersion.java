@@ -54,7 +54,7 @@ public enum ProtocolVersion {
     }
 
     public static ProtocolVersion getVersion(int versionNumber) {
-        if(numbers.length > versionNumber && numbers[versionNumber] != null) {
+        if(versionNumber >= 0 && numbers.length > versionNumber && numbers[versionNumber] != null) {
             return numbers[versionNumber];
         }
         for(ProtocolVersion version : values()) {
