@@ -6,3 +6,6 @@ debug: true
 #  MINECRAFT_1_9_1: lobby_1_9_1
 #  MINECRAFT_1_9_2: lobby_1_9_2
 #  UNKNOWN: well_we_dont_know
+#forge:
+#  MINECRAFT_1_7_6: forge_1_7
+#  MINECRAFT_8: forge_1_8_a, forge_1_8_b

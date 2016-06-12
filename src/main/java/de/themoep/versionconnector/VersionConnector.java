@@ -46,6 +46,7 @@ public class VersionConnector extends Plugin implements Listener {
     private boolean debug = false;
 
     private Map<Integer, List<ServerInfo>> versionMap;
+    private Map<Integer, List<ServerInfo>> forgeMap;
 
     public void onEnable() {
         enabled = loadConfig();
@@ -59,37 +60,8 @@ public class VersionConnector extends Plugin implements Listener {
         try {
             config = new FileConfiguration(this, "config.yml");
             debug = getConfig().getBoolean("debug", true);
-            Configuration versionSection = getConfig().getSection("versions");
-            versionMap = new HashMap<Integer, List<ServerInfo>>();
-            for(String versionStr : versionSection.getKeys()) {
-                int rawVersion;
-                try {
-                    rawVersion = ProtocolVersion.valueOf(versionStr).toInt();
-                } catch(IllegalArgumentException  e1) {
-                    try {
-                        rawVersion = Integer.parseInt(versionStr);
-                    } catch(NumberFormatException e2) {
-                        getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
-                        continue;
-                    }
-                }
-                String serverStr = versionSection.getString(versionStr, null);
-                if(serverStr != null && !serverStr.isEmpty()) {
-                    String[] serverNames = serverStr.split(",");
-                    List<ServerInfo> serverList = new ArrayList<ServerInfo>();
-                    for(String serverName : serverNames) {
-                        ServerInfo server = getProxy().getServerInfo(serverName.trim());
-                        if(server != null) {
-                            serverList.add(server);
-                        } else {
-                            getLogger().warning(serverStr + " is defined for version " + rawVersion + "/" + versionStr + " but there is no server with that name?");
-                        }
-                    }
-                    if(!serverList.isEmpty()) {
-                        versionMap.put(rawVersion, serverList);
-                    }
-                }
-            }
+            versionMap = loadVersionMap(getConfig().getSection("versions"));
+            forgeMap = loadVersionMap(getConfig().getSection("forge"));
 
             return true;
         } catch(IOException e) {
@@ -97,6 +69,43 @@ public class VersionConnector extends Plugin implements Listener {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private Map<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
+        Map<Integer, List<ServerInfo>> map = new HashMap<Integer, List<ServerInfo>>();
+        if(section == null) {
+            return map;
+        }
+        for(String versionStr : section.getKeys()) {
+            int rawVersion;
+            try {
+                rawVersion = ProtocolVersion.valueOf(versionStr).toInt();
+            } catch(IllegalArgumentException  e1) {
+                try {
+                    rawVersion = Integer.parseInt(versionStr);
+                } catch(NumberFormatException e2) {
+                    getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
+                    continue;
+                }
+            }
+            String serverStr = section.getString(versionStr, null);
+            if(serverStr != null && !serverStr.isEmpty()) {
+                String[] serverNames = serverStr.split(",");
+                List<ServerInfo> serverList = new ArrayList<ServerInfo>();
+                for(String serverName : serverNames) {
+                    ServerInfo server = getProxy().getServerInfo(serverName.trim());
+                    if(server != null) {
+                        serverList.add(server);
+                    } else {
+                        getLogger().warning(serverStr + " is defined for version " + rawVersion + "/" + versionStr + " but there is no server with that name?");
+                    }
+                }
+                if(!serverList.isEmpty()) {
+                    versionMap.put(rawVersion, serverList);
+                }
+            }
+        }
+        return map;
     }
 
     @EventHandler
@@ -107,24 +116,31 @@ public class VersionConnector extends Plugin implements Listener {
         int rawVersion = e.getPlayer().getPendingConnection().getVersion();
         ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
 
-        logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version);
+        logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version + "/forge: " + e.getPlayer().isForgeUser());
 
-        List<ServerInfo> serverList = versionMap.get(rawVersion);
+        ServerInfo targetServer = getTargetServer(rawVersion, version, e.getPlayer().isForgeUser());
+        if(targetServer != null) {
+            e.setTarget(targetServer);
+        }
+
+    }
+
+    private ServerInfo getTargetServer(int rawVersion, ProtocolVersion version, boolean forgeUser) {
+        ServerInfo server = null;
+
+        Map<Integer, List<ServerInfo>> map = forgeUser ? forgeMap : versionMap;
+        List<ServerInfo> serverList = map.get(rawVersion);
         if(serverList == null || serverList.isEmpty()) {
-            serverList = versionMap.get(version.toInt());
+            serverList = map.get(version.toInt());
         }
         if(serverList != null && !serverList.isEmpty()) {
-            ServerInfo server = null;
             for(ServerInfo testServer : serverList) {
                 if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
                     server = testServer;
                 }
             }
-            if(server != null) {
-                e.setTarget(server);
-            }
         }
-
+        return server;
     }
 
     public void logDebug(String msg) {
