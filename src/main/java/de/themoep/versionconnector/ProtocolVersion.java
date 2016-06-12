@@ -42,7 +42,7 @@ public enum ProtocolVersion {
     private static ProtocolVersion[] numbers;
 
     static {
-        numbers = new ProtocolVersion[MINECRAFT_1_9_2.toInt()];
+        numbers = new ProtocolVersion[ProtocolVersion.values()[0].toInt()];
         for(ProtocolVersion version : values()) {
             if(numbers.length <= version.toInt()) {
                 numbers = Arrays.copyOfRange(numbers, 0, version.toInt() + 2);
