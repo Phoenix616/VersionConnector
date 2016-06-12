@@ -55,23 +55,32 @@ public class VersionConnectorCommand extends Command {
                     return;
                 }
                 if(args.length == 1) {
-                    sender.sendMessage(ChatColor.YELLOW + "Player versions:");
                     if(plugin.getProxy().getOnlineCount() == 0) {
                         sender.sendMessage(ChatColor.RED + "No player online");
                     } else {
                         Map<ProtocolVersion, Integer> versionMap = new HashMap<ProtocolVersion, Integer>();
+                        Map<ProtocolVersion, Integer> forgeMap = new HashMap<ProtocolVersion, Integer>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
                             ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
-                            Integer count = versionMap.get(version);
-                            if(count == null) {
-                                count = 0;
+                            if(player.isForgeUser()) {
+                                forgeMap.put(version, forgeMap.containsKey(version) ? forgeMap.get(version) + 1 : 1);
+                            } else {
+                                versionMap.put(version, versionMap.containsKey(version) ? versionMap.get(version) + 1 : 1);
                             }
-                            versionMap.put(version, count + 1);
                         }
 
+                        sender.sendMessage(ChatColor.YELLOW + "Player versions:");
                         for(ProtocolVersion version : ProtocolVersion.values()) {
                             if(versionMap.containsKey(version)) {
                                 sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + versionMap.get(version));
+                            }
+                        }
+                        if(forgeMap.size() > 0) {
+                            sender.sendMessage(ChatColor.YELLOW + "Forge versions:");
+                            for(ProtocolVersion version : ProtocolVersion.values()) {
+                                if(forgeMap.containsKey(version)) {
+                                    sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + forgeMap.get(version));
+                                }
                             }
                         }
                     }
@@ -107,7 +116,7 @@ public class VersionConnectorCommand extends Command {
                     for(ProxiedPlayer player : players) {
                         ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
                         String versionStr = version.toString().replace("MINECRAFT_", "").replace("_", ".");
-                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + version.toInt());
+                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + version.toInt() + "/forge: " + player.isForgeUser());
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
@@ -115,8 +124,17 @@ public class VersionConnectorCommand extends Command {
                     sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".config");
                     return;
                 }
-                sender.sendMessage(ChatColor.YELLOW + "Current configuration:");
+                sender.sendMessage(ChatColor.YELLOW + "Current Vanilla configuration:");
                 Configuration versions = plugin.getConfig().getSection("versions");
+                if(versions.getKeys().size() == 0) {
+                    sender.sendMessage(ChatColor.AQUA + "Nothing configured.");
+                } else {
+                    for(String key : versions.getKeys()) {
+                        sender.sendMessage(ChatColor.AQUA + key + ": " + ChatColor.YELLOW + versions.getString(key));
+                    }
+                }
+                sender.sendMessage(ChatColor.YELLOW + "Current Forge configuration:");
+                Configuration forge = plugin.getConfig().getSection("forge");
                 if(versions.getKeys().size() == 0) {
                     sender.sendMessage(ChatColor.AQUA + "Nothing configured.");
                 } else {
