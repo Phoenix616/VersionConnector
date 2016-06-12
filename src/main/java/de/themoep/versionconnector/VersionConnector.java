@@ -101,7 +101,7 @@ public class VersionConnector extends Plugin implements Listener {
                     }
                 }
                 if(!serverList.isEmpty()) {
-                    versionMap.put(rawVersion, serverList);
+                    map.put(rawVersion, serverList);
                 }
             }
         }
