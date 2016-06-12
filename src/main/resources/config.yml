@@ -1,6 +1,7 @@
+debug: true
 #versions:
 #  '34': lobby_for_that_old_version
-#  MINECRAFT_1_8: lobby_1_8
+#  MINECRAFT_1_8: lobby_1_8_a, lobby_1_8_b
 #  MINECRAFT_1_9: lobby_1_9
 #  MINECRAFT_1_9_1: lobby_1_9_1
 #  MINECRAFT_1_9_2: lobby_1_9_2

@@ -7,8 +7,11 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -40,6 +43,9 @@ public class VersionConnector extends Plugin implements Listener {
 
     FileConfiguration config;
     private boolean enabled = false;
+    private boolean debug = false;
+
+    private Map<Integer, List<ServerInfo>> versionMap;
 
     public void onEnable() {
         enabled = loadConfig();
@@ -52,6 +58,39 @@ public class VersionConnector extends Plugin implements Listener {
     public boolean loadConfig() {
         try {
             config = new FileConfiguration(this, "config.yml");
+            debug = getConfig().getBoolean("debug", true);
+            Configuration versionSection = getConfig().getSection("versions");
+            versionMap = new HashMap<Integer, List<ServerInfo>>();
+            for(String versionStr : versionSection.getKeys()) {
+                int rawVersion;
+                try {
+                    rawVersion = ProtocolVersion.valueOf(versionStr).toInt();
+                } catch(IllegalArgumentException  e1) {
+                    try {
+                        rawVersion = Integer.parseInt(versionStr);
+                    } catch(NumberFormatException e2) {
+                        getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
+                        continue;
+                    }
+                }
+                String serverStr = versionSection.getString(versionStr, null);
+                if(serverStr != null && !serverStr.isEmpty()) {
+                    String[] serverNames = serverStr.split(",");
+                    List<ServerInfo> serverList = new ArrayList<ServerInfo>();
+                    for(String serverName : serverNames) {
+                        ServerInfo server = getProxy().getServerInfo(serverName.trim());
+                        if(server != null) {
+                            serverList.add(server);
+                        } else {
+                            getLogger().warning(serverStr + " is defined for version " + rawVersion + "/" + versionStr + " but there is no server with that name?");
+                        }
+                    }
+                    if(!serverList.isEmpty()) {
+                        versionMap.put(rawVersion, serverList);
+                    }
+                }
+            }
+
             return true;
         } catch(IOException e) {
             getLogger().log(Level.SEVERE, "Can't load plugin config!");
@@ -68,23 +107,17 @@ public class VersionConnector extends Plugin implements Listener {
         int rawVersion = e.getPlayer().getPendingConnection().getVersion();
         ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
 
-        getLogger().log(Level.INFO, e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version);
+        logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version);
 
-        String serverList = getConfig().getString("versions." + rawVersion, null);
-        if(serverList == null) {
-            serverList = getConfig().getString("versions." + version, null);
+        List<ServerInfo> serverList = versionMap.get(rawVersion);
+        if(serverList == null || serverList.isEmpty()) {
+            serverList = versionMap.get(version.toInt());
         }
         if(serverList != null && !serverList.isEmpty()) {
-            String[] serverNames = serverList.split(",");
             ServerInfo server = null;
-            for(String serverName : serverNames) {
-                ServerInfo testServer = getProxy().getServerInfo(serverName);
-                if(testServer != null) {
-                    if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
-                        server = testServer;
-                    }
-                } else {
-                    getLogger().warning(serverList + " is defined for version " + rawVersion + "/" + version + " but there is no server with that name?");
+            for(ServerInfo testServer : serverList) {
+                if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
+                    server = testServer;
                 }
             }
             if(server != null) {
@@ -92,6 +125,11 @@ public class VersionConnector extends Plugin implements Listener {
             }
         }
 
+    }
+
+    public void logDebug(String msg) {
+        if(debug)
+            getLogger().log(Level.INFO, msg);
     }
 
     public boolean isEnabled() {
