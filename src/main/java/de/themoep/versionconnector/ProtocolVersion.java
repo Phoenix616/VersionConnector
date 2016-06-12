@@ -28,6 +28,8 @@ import java.util.Arrays;
  */
 
 public enum ProtocolVersion {
+    MINECRAFT_1_10(210),
+    MINECRAFT_1_9_3(110),
     MINECRAFT_1_9_2(109),
     MINECRAFT_1_9_1(108),
     MINECRAFT_1_9(107),
