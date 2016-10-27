@@ -9,10 +9,12 @@ import net.md_5.bungee.event.EventHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /*
  * Licensed under the Nietzsche Public License v0.6
@@ -41,12 +43,11 @@ import java.util.logging.Level;
 
 public class VersionConnector extends Plugin implements Listener {
 
-    FileConfiguration config;
+    private FileConfiguration config;
     private boolean enabled = false;
     private boolean debug = false;
 
-    private Map<Integer, List<ServerInfo>> versionMap;
-    private Map<Integer, List<ServerInfo>> forgeMap;
+    private Map<ServerInfo, ConnectorInfo> connectorMap;
 
     public void onEnable() {
         enabled = loadConfig();
@@ -60,8 +61,21 @@ public class VersionConnector extends Plugin implements Listener {
         try {
             config = new FileConfiguration(this, "config.yml");
             debug = getConfig().getBoolean("debug", true);
-            versionMap = loadVersionMap(getConfig().getSection("versions"));
-            forgeMap = loadVersionMap(getConfig().getSection("forge"));
+            connectorMap = new HashMap<>();
+
+            // Legacy config
+            loadConnectorInfo(
+                    loadVersionMap(getConfig().getSection("versions")),
+                    loadVersionMap(getConfig().getSection("forge"))
+            );
+
+            Configuration serversSection = getConfig().getSection("servers");
+            for (String key : serversSection.getKeys()) {
+                loadConnectorInfo(
+                        loadVersionMap(serversSection.getSection(key + ".versions")),
+                        loadVersionMap(serversSection.getSection(key + ".forge"))
+                );
+            }
 
             return true;
         } catch(IOException e) {
@@ -69,6 +83,14 @@ public class VersionConnector extends Plugin implements Listener {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private void loadConnectorInfo(Map<Integer, List<ServerInfo>> versions, Map<Integer, List<ServerInfo>> forge) {
+        ConnectorInfo legacyConnector = new ConnectorInfo(versions, forge);
+
+        for (ServerInfo server : legacyConnector.getServers()) {
+            connectorMap.put(server, legacyConnector);
+        }
     }
 
     private Map<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
@@ -110,7 +132,7 @@ public class VersionConnector extends Plugin implements Listener {
 
     @EventHandler
     public void onPlayerConnect(ServerConnectEvent e) {
-        if(!enabled || e.getPlayer().getServer() != null) {
+        if(!isEnabled() || e.isCancelled()) {
             return;
         }
         int rawVersion = e.getPlayer().getPendingConnection().getVersion();
@@ -118,29 +140,27 @@ public class VersionConnector extends Plugin implements Listener {
 
         logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version + "/forge: " + e.getPlayer().isForgeUser());
 
-        ServerInfo targetServer = getTargetServer(rawVersion, version, e.getPlayer().isForgeUser());
+        ServerInfo targetServer = getTargetServer(e.getTarget(), rawVersion, version, e.getPlayer().isForgeUser());
         if(targetServer != null) {
             e.setTarget(targetServer);
         }
-
     }
 
-    private ServerInfo getTargetServer(int rawVersion, ProtocolVersion version, boolean forgeUser) {
-        ServerInfo server = null;
+    /**
+     * Calculate the target server
+     * @param targetServer  The server that is being connected to
+     * @param rawVersion    The raw version of the player'client
+     * @param version       The protocol version of the player's client
+     * @param isForge       Whether or not the player is using a forge client
+     * @return              The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
+     */
+    private ServerInfo getTargetServer(ServerInfo targetServer, int rawVersion, ProtocolVersion version, boolean isForge) {
+        ConnectorInfo connectorInfo = connectorMap.get(targetServer);
+        if (connectorInfo == null) {
+            return null;
+        }
 
-        Map<Integer, List<ServerInfo>> map = forgeUser ? forgeMap : versionMap;
-        List<ServerInfo> serverList = map.get(rawVersion);
-        if(serverList == null || serverList.isEmpty()) {
-            serverList = map.get(version.toInt());
-        }
-        if(serverList != null && !serverList.isEmpty()) {
-            for(ServerInfo testServer : serverList) {
-                if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
-                    server = testServer;
-                }
-            }
-        }
-        return server;
+        return connectorInfo.getTargetServer(rawVersion, version, isForge);
     }
 
     public void logDebug(String msg) {
