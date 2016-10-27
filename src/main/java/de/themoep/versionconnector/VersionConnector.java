@@ -72,7 +72,7 @@ public class VersionConnector extends Plugin implements Listener {
     }
 
     private Map<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
-        Map<Integer, List<ServerInfo>> map = new HashMap<Integer, List<ServerInfo>>();
+        Map<Integer, List<ServerInfo>> map = new HashMap<>();
         if(section == null) {
             return map;
         }
