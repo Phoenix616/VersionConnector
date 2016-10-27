@@ -107,11 +107,9 @@ public class VersionConnectorCommand extends Command {
                         }
                     }
 
-                    Collections.sort(players, Collections.reverseOrder(new Comparator<ProxiedPlayer>() {
-                        public int compare(ProxiedPlayer p1, ProxiedPlayer p2) {
-                            return Integer.valueOf(p1.getPendingConnection().getVersion()).compareTo(p2.getPendingConnection().getVersion());
-                        }
-                    }));
+                    Collections.sort(players, Collections.reverseOrder(
+                            (p1, p2) -> Integer.valueOf(p1.getPendingConnection().getVersion()).compareTo(p2.getPendingConnection().getVersion())
+                    ));
 
                     for(ProxiedPlayer player : players) {
                         ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
