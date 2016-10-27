@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-/**
+/*
  * Licensed under the Nietzsche Public License v0.6
  *
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)

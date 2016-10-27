@@ -2,7 +2,7 @@ package de.themoep.versionconnector;
 
 import java.util.Arrays;
 
-/**
+/*
  * Licensed under the Nietzsche Public License v0.6
  *
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-/**
+/*
  * Licensed under the Nietzsche Public License v0.6
  *
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)

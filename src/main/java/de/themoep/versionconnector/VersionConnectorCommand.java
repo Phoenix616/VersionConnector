@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
+/*
  * Licensed under the Nietzsche Public License v0.6
  *
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)
