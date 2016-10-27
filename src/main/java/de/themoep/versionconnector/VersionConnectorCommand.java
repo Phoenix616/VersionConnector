@@ -133,11 +133,11 @@ public class VersionConnectorCommand extends Command {
                 }
                 sender.sendMessage(ChatColor.YELLOW + "Current Forge configuration:");
                 Configuration forge = plugin.getConfig().getSection("forge");
-                if(versions.getKeys().size() == 0) {
+                if(forge.getKeys().size() == 0) {
                     sender.sendMessage(ChatColor.AQUA + "Nothing configured.");
                 } else {
-                    for(String key : versions.getKeys()) {
-                        sender.sendMessage(ChatColor.AQUA + key + ": " + ChatColor.YELLOW + versions.getString(key));
+                    for(String key : forge.getKeys()) {
+                        sender.sendMessage(ChatColor.AQUA + key + ": " + ChatColor.YELLOW + forge.getString(key));
                     }
                 }
             } else if("reload".equalsIgnoreCase(args[0])) {
