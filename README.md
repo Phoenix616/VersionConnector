@@ -1,5 +1,5 @@
 # VersionConnector
-Bungee plugin to connect different Minecraft client versions to different servers on join or server switch. Includes simple load balancing and Forge switch.
+Bungee plugin to connect different Minecraft client versions to different servers on join or server switch. Includes simple load balancing and Forge switch. (Forge can only be detected with 1.8+ clients!)
 
 Development builds can be found on the [Minebench](https://www.minebench.de) Jenkins as usual: http://ci.minebench.de/job/VersionConnector/
 
@@ -7,6 +7,7 @@ Development builds can be found on the [Minebench](https://www.minebench.de) Jen
 
 It will fallback to the version with the closest protocol number below the actual client's protocol. You can however set the protocol version directly if you want or submit additions to the [ProtocolVersion](https://github.com/Minebench/VersionConnector/blob/master/src/main/java/de/themoep/versionconnector/ProtocolVersion.java) enum.
 
+- MINECRAFT_1_11 (Protocol version 315)
 - MINECRAFT_1_10 (Protocol version 210)
 - MINECRAFT_1_9_4 (Protocol version 110)
 - MINECRAFT_1_9 (Protcol version 107)
