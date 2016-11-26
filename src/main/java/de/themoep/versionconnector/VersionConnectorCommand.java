@@ -125,14 +125,14 @@ public class VersionConnectorCommand extends Command {
                 sender.sendMessage(ChatColor.AQUA+ "Debug: " + ChatColor.YELLOW + plugin.getConfig().getBoolean("debug", true));
 
                 Configuration versions = plugin.getConfig().getSection("versions");
-                if (versions.getKeys().size() > 0) {
+                if (!versions.getKeys().isEmpty()) {
                     sender.sendMessage(ChatColor.YELLOW + "Legacy versions configuration:");
                     for(String key : versions.getKeys()) {
                         sender.sendMessage(ChatColor.AQUA + "  " + key + ": " + ChatColor.YELLOW + versions.getString(key));
                     }
                 }
                 Configuration forge = plugin.getConfig().getSection("forge");
-                if (forge.getKeys().size() > 0) {
+                if (!forge.getKeys().isEmpty()) {
                     sender.sendMessage(ChatColor.YELLOW + "Legacy Forge configuration:");
                     for(String key : forge.getKeys()) {
                         sender.sendMessage(ChatColor.AQUA + "  " + key + ": " + ChatColor.YELLOW + forge.getString(key));
@@ -144,10 +144,11 @@ public class VersionConnectorCommand extends Command {
                     sender.sendMessage(ChatColor.AQUA + "No servers config.");
                 } else {
                     for (String key : servers.getKeys()) {
-                        sender.sendMessage(ChatColor.YELLOW + key + " configuration:");
 
-                        Configuration serverVersions = plugin.getConfig().getSection("forge");
-                        if (serverVersions.getKeys().size() == 0) {
+                        Configuration server = servers.getSection(key);
+                        sender.sendMessage(ChatColor.YELLOW + key + " configuration:");
+                        Configuration serverVersions = server.getSection("forge");
+                        if (serverVersions.getKeys().isEmpty()) {
                             sender.sendMessage(ChatColor.AQUA + "  No versions config.");
                         } else {
                             sender.sendMessage(ChatColor.YELLOW + "  Versions:");
@@ -156,8 +157,8 @@ public class VersionConnectorCommand extends Command {
                             }
                         }
 
-                        Configuration serverForge = plugin.getConfig().getSection("forge");
-                        if (serverForge.getKeys().size() == 0) {
+                        Configuration serverForge = server.getSection("forge");
+                        if (serverForge.getKeys().isEmpty()) {
                             sender.sendMessage(ChatColor.AQUA + "  No forge config.");
                         } else {
                             sender.sendMessage(ChatColor.YELLOW + "  Forge:");
