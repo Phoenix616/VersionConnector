@@ -47,7 +47,7 @@ public class VersionConnector extends Plugin implements Listener {
     private boolean enabled = false;
     private boolean debug = false;
 
-    private Map<ServerInfo, ConnectorInfo> connectorMap;
+    private Map<String, ConnectorInfo> connectorMap;
 
     public void onEnable() {
         enabled = loadConfig();
@@ -86,10 +86,10 @@ public class VersionConnector extends Plugin implements Listener {
     }
 
     private void loadConnectorInfo(Map<Integer, List<ServerInfo>> versions, Map<Integer, List<ServerInfo>> forge) {
-        ConnectorInfo legacyConnector = new ConnectorInfo(versions, forge);
+        ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge);
 
-        for (ServerInfo server : legacyConnector.getServers()) {
-            connectorMap.put(server, legacyConnector);
+        for (ServerInfo server : connectorInfo.getServers()) {
+            connectorMap.put(server.getName().toLowerCase(), connectorInfo);
         }
     }
 
@@ -155,7 +155,7 @@ public class VersionConnector extends Plugin implements Listener {
      * @return              The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
      */
     private ServerInfo getTargetServer(ServerInfo targetServer, int rawVersion, ProtocolVersion version, boolean isForge) {
-        ConnectorInfo connectorInfo = connectorMap.get(targetServer);
+        ConnectorInfo connectorInfo = connectorMap.get(targetServer.getName().toLowerCase());
         if (connectorInfo == null) {
             return null;
         }
