@@ -36,7 +36,7 @@ public class ConnectorInfo {
     private final Map<Integer, List<ServerInfo>> vanillaMap;
     private final Map<Integer, List<ServerInfo>> forgeMap;
 
-    private final ArrayList serverList;
+    private final List<ServerInfo> serverList;
 
     public ConnectorInfo(Map<Integer, List<ServerInfo>> vanillaMap, Map<Integer, List<ServerInfo>> forgeMap) {
         this.vanillaMap = vanillaMap;
@@ -62,12 +62,13 @@ public class ConnectorInfo {
 
     /**
      * Calculate the server to connect to when connecting to this connector based on the version and player count
-     * @param rawVersion    The raw version of the player'client
-     * @param version       The protocol version of the player's client
-     * @param isForge       Whether or not the player is using a forge client
-     * @return              The server that the player should be connecting to or <tt>null</tt> if he shouldn't connect to any of them
+     * @param rawVersion        The raw version of the player'client
+     * @param version           The protocol version of the player's client
+     * @param isForge           Whether or not the player is using a forge client
+     * @param startBalancing    The emount of players on the server before we try to balance onto another one (if configured)
+     * @return                  The server that the player should be connecting to or <tt>null</tt> if he shouldn't connect to any of them
      */
-    public ServerInfo getTargetServer(int rawVersion, ProtocolVersion version, boolean isForge) {
+    public ServerInfo getTargetServer(int rawVersion, ProtocolVersion version, boolean isForge, int startBalancing) {
         ServerInfo server = null;
 
         Map<Integer, List<ServerInfo>> map = isForge ? forgeMap : vanillaMap;
@@ -78,7 +79,7 @@ public class ConnectorInfo {
 
         if(serverList != null && !serverList.isEmpty()) {
             for(ServerInfo testServer : serverList) {
-                if(server == null || testServer.getPlayers().size() < server.getPlayers().size()) {
+                if(server == null || server.getPlayers().size() >= startBalancing && testServer.getPlayers().size() < server.getPlayers().size()) {
                     server = testServer;
                 }
             }

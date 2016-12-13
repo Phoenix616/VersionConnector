@@ -46,6 +46,7 @@ public class VersionConnector extends Plugin implements Listener {
     private FileConfiguration config;
     private boolean enabled = false;
     private boolean debug = false;
+    private int startBalancing = 0;
 
     private Map<String, ConnectorInfo> connectorMap;
 
@@ -61,6 +62,7 @@ public class VersionConnector extends Plugin implements Listener {
         try {
             config = new FileConfiguration(this, "config.yml");
             debug = getConfig().getBoolean("debug", true);
+            startBalancing = getConfig().getInt("start-balancing", 0);
             connectorMap = new HashMap<>();
 
             // Legacy config
@@ -160,7 +162,7 @@ public class VersionConnector extends Plugin implements Listener {
             return null;
         }
 
-        return connectorInfo.getTargetServer(rawVersion, version, isForge);
+        return connectorInfo.getTargetServer(rawVersion, version, isForge, startBalancing);
     }
 
     public void logDebug(String msg) {
