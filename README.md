@@ -19,6 +19,9 @@ It will fallback to the version with the closest protocol number below the actua
 
 ``` yaml
 debug: false
+# Minumum amount of players that need to be online on one server to start balancing
+# new players to the other server (e.g. between lobby_1_8_a & lobby_1_8_b)
+start-balancing: 0
 servers:
   lobby:
     versions:
