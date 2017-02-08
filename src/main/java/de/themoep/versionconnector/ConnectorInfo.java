@@ -79,7 +79,7 @@ public class ConnectorInfo {
 
         if(serverList != null && !serverList.isEmpty()) {
             for(ServerInfo testServer : serverList) {
-                if(server == null || server.getPlayers().size() >= startBalancing && testServer.getPlayers().size() < server.getPlayers().size()) {
+                if(server == null || startBalancing > -1 && server.getPlayers().size() >= startBalancing && testServer.getPlayers().size() < server.getPlayers().size()) {
                     server = testServer;
                 }
             }
