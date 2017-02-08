@@ -162,7 +162,19 @@ public class VersionConnector extends Plugin implements Listener {
             return null;
         }
 
-        return connectorInfo.getTargetServer(rawVersion, version, isForge, startBalancing);
+        List<ServerInfo> serverList = connectorInfo.getServers(rawVersion, version, isForge);
+        if (serverList == null || serverList.isEmpty() // No servers configured for that version
+                || startBalancing < 0 && serverList.contains(targetServer)) { // No need to balance and the target is already in the list
+            return null;
+        }
+
+        ServerInfo server = null;
+        for(ServerInfo testedServer : serverList) {
+            if(server == null || startBalancing > -1 && server.getPlayers().size() >= startBalancing && testedServer.getPlayers().size() < server.getPlayers().size()) {
+                server = testedServer;
+            }
+        }
+        return server;
     }
 
     public void logDebug(String msg) {

@@ -56,34 +56,24 @@ public class ConnectorInfo {
         return forgeMap;
     }
 
-    public List<ServerInfo> getServers() {
-        return serverList;
-    }
-
     /**
-     * Calculate the server to connect to when connecting to this connector based on the version and player count
-     * @param rawVersion        The raw version of the player'client
-     * @param version           The protocol version of the player's client
-     * @param isForge           Whether or not the player is using a forge client
-     * @param startBalancing    The emount of players on the server before we try to balance onto another one (if configured)
-     * @return                  The server that the player should be connecting to or <tt>null</tt> if he shouldn't connect to any of them
+     * Get the list of servers that matches the inputted parameters
+     * @param rawVersion    The raw version of the player'client
+     * @param version       The protocol version of the player's client
+     * @param isForge       Whether or not the player is using a forge client
+     * @return The list of servers that matches the inputted parameters
      */
-    public ServerInfo getTargetServer(int rawVersion, ProtocolVersion version, boolean isForge, int startBalancing) {
-        ServerInfo server = null;
-
+    public List<ServerInfo> getServers(int rawVersion, ProtocolVersion version, boolean isForge) {
         Map<Integer, List<ServerInfo>> map = isForge ? forgeMap : vanillaMap;
         List<ServerInfo> serverList = map.get(rawVersion);
         if(serverList == null || serverList.isEmpty()) {
             serverList = map.get(version.toInt());
         }
-
-        if(serverList != null && !serverList.isEmpty()) {
-            for(ServerInfo testServer : serverList) {
-                if(server == null || startBalancing > -1 && server.getPlayers().size() >= startBalancing && testServer.getPlayers().size() < server.getPlayers().size()) {
-                    server = testServer;
-                }
-            }
-        }
-        return server;
+        return serverList;
     }
+
+    public List<ServerInfo> getServers() {
+        return serverList;
+    }
+
 }
