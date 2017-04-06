@@ -147,7 +147,7 @@ public class VersionConnectorCommand extends Command {
 
                         Configuration server = servers.getSection(key);
                         sender.sendMessage(ChatColor.YELLOW + key + " configuration:");
-                        Configuration serverVersions = server.getSection("forge");
+                        Configuration serverVersions = server.getSection("versions");
                         if (serverVersions.getKeys().isEmpty()) {
                             sender.sendMessage(ChatColor.AQUA + "  No versions config.");
                         } else {
