@@ -1,6 +1,7 @@
 package de.themoep.versionconnector;
 
-import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /*
  * Licensed under the Nietzsche Public License v0.6
@@ -28,7 +29,11 @@ import java.util.Arrays;
  */
 
 public enum ProtocolVersion {
+    MINECRAFT_1_13(393),
+    MINECRAFT_1_12_2(340),
+    MINECRAFT_1_12_1(338),
     MINECRAFT_1_12(335),
+    MINECRAFT_1_11_2(316),
     MINECRAFT_1_11_1(316),
     MINECRAFT_1_11(315),
     MINECRAFT_1_10(210),
@@ -42,15 +47,12 @@ public enum ProtocolVersion {
     UNKNOWN(0);
 
     private final int number;
-    private static ProtocolVersion[] numbers;
+    private static Map<Integer, ProtocolVersion> numbers;
 
     static {
-        numbers = new ProtocolVersion[ProtocolVersion.values()[0].toInt()];
+        numbers = new LinkedHashMap<>();
         for(ProtocolVersion version : values()) {
-            if(numbers.length <= version.toInt()) {
-                numbers = Arrays.copyOfRange(numbers, 0, version.toInt() + 2);
-            }
-            numbers[version.toInt()] = version;
+            numbers.put(version.number, version);
         }
     }
 
@@ -59,8 +61,9 @@ public enum ProtocolVersion {
     }
 
     public static ProtocolVersion getVersion(int versionNumber) {
-        if(versionNumber >= 0 && numbers.length > versionNumber && numbers[versionNumber] != null) {
-            return numbers[versionNumber];
+        ProtocolVersion protocolVersion = numbers.get(versionNumber);
+        if (protocolVersion != null) {
+            return protocolVersion;
         }
         for(ProtocolVersion version : values()) {
             if(version.toInt() <= versionNumber) {

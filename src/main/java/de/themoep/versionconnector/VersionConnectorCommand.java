@@ -58,14 +58,14 @@ public class VersionConnectorCommand extends Command {
                     if(plugin.getProxy().getOnlineCount() == 0) {
                         sender.sendMessage(ChatColor.RED + "No player online");
                     } else {
-                        Map<ProtocolVersion, Integer> versionMap = new HashMap<ProtocolVersion, Integer>();
-                        Map<ProtocolVersion, Integer> forgeMap = new HashMap<ProtocolVersion, Integer>();
+                        Map<ProtocolVersion, Integer> versionMap = new HashMap<>();
+                        Map<ProtocolVersion, Integer> forgeMap = new HashMap<>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
                             ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
                             if(player.isForgeUser()) {
-                                forgeMap.put(version, forgeMap.containsKey(version) ? forgeMap.get(version) + 1 : 1);
+                                forgeMap.put(version, forgeMap.getOrDefault(version, 0) + 1);
                             } else {
-                                versionMap.put(version, versionMap.containsKey(version) ? versionMap.get(version) + 1 : 1);
+                                versionMap.put(version, versionMap.getOrDefault(version, 0) + 1);
                             }
                         }
 
@@ -107,8 +107,8 @@ public class VersionConnectorCommand extends Command {
                         }
                     }
 
-                    Collections.sort(players, Collections.reverseOrder(
-                            (p1, p2) -> Integer.valueOf(p1.getPendingConnection().getVersion()).compareTo(p2.getPendingConnection().getVersion())
+                    players.sort(Collections.reverseOrder(
+                            Comparator.comparingInt(p -> p.getPendingConnection().getVersion())
                     ));
 
                     for(ProxiedPlayer player : players) {

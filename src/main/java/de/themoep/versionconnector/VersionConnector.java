@@ -103,7 +103,7 @@ public class VersionConnector extends Plugin implements Listener {
         for(String versionStr : section.getKeys()) {
             int rawVersion;
             try {
-                rawVersion = ProtocolVersion.valueOf(versionStr).toInt();
+                rawVersion = ProtocolVersion.valueOf(versionStr.toUpperCase()).toInt();
             } catch(IllegalArgumentException  e1) {
                 try {
                     rawVersion = Integer.parseInt(versionStr);
