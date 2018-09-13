@@ -1,20 +1,21 @@
 package de.themoep.versionconnector;
 
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
+import us.myles.ViaVersion.api.Via;
+import us.myles.ViaVersion.api.ViaAPI;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 /*
  * Licensed under the Nietzsche Public License v0.6
@@ -48,6 +49,8 @@ public class VersionConnector extends Plugin implements Listener {
     private boolean debug = false;
     private int startBalancing = 0;
 
+    private boolean isViaVersionAvailable = false;
+
     private Map<String, ConnectorInfo> connectorMap;
 
     public void onEnable() {
@@ -56,6 +59,7 @@ public class VersionConnector extends Plugin implements Listener {
             getProxy().getPluginManager().registerListener(this, this);
         }
         getProxy().getPluginManager().registerCommand(this, new VersionConnectorCommand(this));
+        isViaVersionAvailable = getProxy().getPluginManager().getPlugin("ViaVersion") != null;
     }
 
     public boolean loadConfig() {
@@ -137,7 +141,7 @@ public class VersionConnector extends Plugin implements Listener {
         if(!isEnabled() || e.isCancelled()) {
             return;
         }
-        int rawVersion = e.getPlayer().getPendingConnection().getVersion();
+        int rawVersion = getVersion(e.getPlayer());
         ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
 
         logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version + "/forge: " + e.getPlayer().isForgeUser());
@@ -146,6 +150,14 @@ public class VersionConnector extends Plugin implements Listener {
         if(targetServer != null) {
             e.setTarget(targetServer);
         }
+    }
+
+    private int getVersion(ProxiedPlayer player) {
+        if (isViaVersionAvailable) {
+            return Via.getAPI().getPlayerVersion(player.getUniqueId());
+        }
+
+        return player.getPendingConnection().getVersion();
     }
 
     /**
