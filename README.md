@@ -35,7 +35,7 @@ servers:
   lobby:
     versions:
       '34': lobby_prot_34 # Lobby for specific protocol version
-      MINECRAFT_1_8: lobby_1_8_a, lobby_1_8_b # Lobbies for 1.8
+      '1.8': lobby_1_8_a, lobby_1_8_b # Lobbies for 1.8
       MINECRAFT_1_9: lobby_1_9 # Lobby for 1.9
       UNKNOWN: well_we_dont_know # Lobby for an Unknown version (not a fallback if no config for version was found!)
     forge:
@@ -43,8 +43,8 @@ servers:
       MINECRAFT_8: forge_lobby_1_8_a, forge_lobby_1_8_b
   survival:
     versions:
-      MINECRAFT_1_8: survival_1_8
-      MINECRAFT_1_10: survival_1_10
+      '1.8': survival_1_8
+      '1.10': survival_1_10
       UNKNOWN: survival_wat
     forge:
       MINECRAFT_1_9: forge_suvival_1_9

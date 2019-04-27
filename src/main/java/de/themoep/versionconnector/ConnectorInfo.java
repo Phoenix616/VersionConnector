@@ -29,16 +29,16 @@ import net.md_5.bungee.api.config.ServerInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
 
 public class ConnectorInfo {
 
-    private final Map<Integer, List<ServerInfo>> vanillaMap;
-    private final Map<Integer, List<ServerInfo>> forgeMap;
+    private final SortedMap<Integer, List<ServerInfo>> vanillaMap;
+    private final SortedMap<Integer, List<ServerInfo>> forgeMap;
 
     private final List<ServerInfo> serverList;
 
-    public ConnectorInfo(Map<Integer, List<ServerInfo>> vanillaMap, Map<Integer, List<ServerInfo>> forgeMap) {
+    public ConnectorInfo(SortedMap<Integer, List<ServerInfo>> vanillaMap, SortedMap<Integer, List<ServerInfo>> forgeMap) {
         this.vanillaMap = vanillaMap;
         this.forgeMap = forgeMap;
 
@@ -48,26 +48,28 @@ public class ConnectorInfo {
         forgeMap.values().forEach(serverList::addAll);
     }
 
-    public Map<Integer, List<ServerInfo>> getVanillaMap() {
+    public SortedMap<Integer, List<ServerInfo>> getVanillaMap() {
         return vanillaMap;
     }
 
-    public Map<Integer, List<ServerInfo>> getForgeMap() {
+    public SortedMap<Integer, List<ServerInfo>> getForgeMap() {
         return forgeMap;
     }
 
     /**
      * Get the list of servers that matches the inputted parameters
-     * @param rawVersion    The raw version of the player'client
      * @param version       The protocol version of the player's client
      * @param isForge       Whether or not the player is using a forge client
      * @return The list of servers that matches the inputted parameters
      */
-    public List<ServerInfo> getServers(int rawVersion, ProtocolVersion version, boolean isForge) {
-        Map<Integer, List<ServerInfo>> map = isForge ? forgeMap : vanillaMap;
-        List<ServerInfo> serverList = map.get(rawVersion);
-        if(serverList == null || serverList.isEmpty()) {
-            serverList = map.get(version.toInt());
+    public List<ServerInfo> getServers(int version, boolean isForge) {
+        SortedMap<Integer, List<ServerInfo>> map = isForge ? forgeMap : vanillaMap;
+        List<ServerInfo> serverList = map.get(version);
+        if (serverList == null) {
+            SortedMap<Integer, List<ServerInfo>> smallerVersions = map.headMap(version);
+            if (!smallerVersions.isEmpty()) {
+                serverList = map.get(smallerVersions.lastKey());
+            }
         }
         return serverList;
     }

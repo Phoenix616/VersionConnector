@@ -7,8 +7,8 @@ start-balancing: 0
 #  lobby:
 #    versions:
 #      '34': lobby_for_that_old_version
-#      MINECRAFT_1_8: lobby_1_8_a, lobby_1_8_b
-#      MINECRAFT_1_9: lobby_1_9
+#      '1.8': lobby_1_8_a, lobby_1_8_b
+#      '1.9: lobby_1_9
 #      MINECRAFT_1_9_1: lobby_1_9_1
 #      MINECRAFT_1_9_2: lobby_1_9_2
 #      MINECRAFT_1_10: lobby_1_9_2

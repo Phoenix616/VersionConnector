@@ -13,8 +13,11 @@ import us.myles.ViaVersion.api.ViaAPI;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 /*
@@ -55,7 +58,7 @@ public class VersionConnector extends Plugin implements Listener {
 
     public void onEnable() {
         enabled = loadConfig();
-        if(enabled) {
+        if (enabled) {
             getProxy().getPluginManager().registerListener(this, this);
         }
         getProxy().getPluginManager().registerCommand(this, new VersionConnectorCommand(this));
@@ -84,14 +87,14 @@ public class VersionConnector extends Plugin implements Listener {
             }
 
             return true;
-        } catch(IOException e) {
+        } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Can't load plugin config!");
             e.printStackTrace();
         }
         return false;
     }
 
-    private void loadConnectorInfo(Map<Integer, List<ServerInfo>> versions, Map<Integer, List<ServerInfo>> forge) {
+    private void loadConnectorInfo(SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
         ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge);
 
         for (ServerInfo server : connectorInfo.getServers()) {
@@ -99,36 +102,40 @@ public class VersionConnector extends Plugin implements Listener {
         }
     }
 
-    private Map<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
-        Map<Integer, List<ServerInfo>> map = new HashMap<>();
-        if(section == null) {
+    private SortedMap<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
+        SortedMap<Integer, List<ServerInfo>> map = new TreeMap<>();
+        if (section == null) {
             return map;
         }
-        for(String versionStr : section.getKeys()) {
+        for (String versionStr : section.getKeys()) {
             int rawVersion;
             try {
-                rawVersion = ProtocolVersion.valueOf(versionStr.toUpperCase()).toInt();
-            } catch(IllegalArgumentException  e1) {
+                rawVersion = Integer.parseInt(versionStr);
+            } catch (NumberFormatException e2) {
                 try {
-                    rawVersion = Integer.parseInt(versionStr);
-                } catch(NumberFormatException e2) {
+                    String getVersion = versionStr.toUpperCase().replace('.', '_');
+                    if (!getVersion.startsWith("MINECRAFT_")) {
+                        getVersion = "MINECRAFT_" + getVersion;
+                    }
+                    rawVersion = ProtocolVersion.valueOf(getVersion).toInt();
+                } catch (IllegalArgumentException e1) {
                     getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
                     continue;
                 }
             }
             String serverStr = section.getString(versionStr, null);
-            if(serverStr != null && !serverStr.isEmpty()) {
+            if (serverStr != null && !serverStr.isEmpty()) {
                 String[] serverNames = serverStr.split(",");
-                List<ServerInfo> serverList = new ArrayList<ServerInfo>();
-                for(String serverName : serverNames) {
+                List<ServerInfo> serverList = new ArrayList<>();
+                for (String serverName : serverNames) {
                     ServerInfo server = getProxy().getServerInfo(serverName.trim());
-                    if(server != null) {
+                    if (server != null) {
                         serverList.add(server);
                     } else {
                         getLogger().warning(serverStr + " is defined for version " + rawVersion + "/" + versionStr + " but there is no server with that name?");
                     }
                 }
-                if(!serverList.isEmpty()) {
+                if (!serverList.isEmpty()) {
                     map.put(rawVersion, serverList);
                 }
             }
@@ -138,16 +145,15 @@ public class VersionConnector extends Plugin implements Listener {
 
     @EventHandler
     public void onPlayerConnect(ServerConnectEvent e) {
-        if(!isEnabled() || e.isCancelled()) {
+        if (!isEnabled() || e.isCancelled()) {
             return;
         }
-        int rawVersion = getVersion(e.getPlayer());
-        ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
+        int version = getVersion(e.getPlayer());
 
-        logDebug(e.getPlayer().getName() + "'s version: " + rawVersion + "/" + version + "/forge: " + e.getPlayer().isForgeUser());
+        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + e.getPlayer().isForgeUser());
 
-        ServerInfo targetServer = getTargetServer(e.getTarget(), rawVersion, version, e.getPlayer().isForgeUser());
-        if(targetServer != null) {
+        ServerInfo targetServer = getTargetServer(e.getTarget(), version, e.getPlayer().isForgeUser());
+        if (targetServer != null) {
             e.setTarget(targetServer);
         }
     }
@@ -162,27 +168,26 @@ public class VersionConnector extends Plugin implements Listener {
 
     /**
      * Calculate the target server
-     * @param targetServer  The server that is being connected to
-     * @param rawVersion    The raw version of the player'client
-     * @param version       The protocol version of the player's client
-     * @param isForge       Whether or not the player is using a forge client
-     * @return              The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
+     * @param targetServer The server that is being connected to
+     * @param version      The protocol version of the player'client
+     * @param isForge      Whether or not the player is using a forge client
+     * @return The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
      */
-    private ServerInfo getTargetServer(ServerInfo targetServer, int rawVersion, ProtocolVersion version, boolean isForge) {
+    private ServerInfo getTargetServer(ServerInfo targetServer, int version, boolean isForge) {
         ConnectorInfo connectorInfo = connectorMap.get(targetServer.getName().toLowerCase());
         if (connectorInfo == null) {
             return null;
         }
 
-        List<ServerInfo> serverList = connectorInfo.getServers(rawVersion, version, isForge);
+        List<ServerInfo> serverList = connectorInfo.getServers(version, isForge);
         if (serverList == null || serverList.isEmpty() // No servers configured for that version
                 || startBalancing < 0 && serverList.contains(targetServer)) { // No need to balance and the target is already in the list
             return null;
         }
 
         ServerInfo server = null;
-        for(ServerInfo testedServer : serverList) {
-            if(server == null || startBalancing > -1 && server.getPlayers().size() >= startBalancing && testedServer.getPlayers().size() < server.getPlayers().size()) {
+        for (ServerInfo testedServer : serverList) {
+            if (server == null || startBalancing > -1 && server.getPlayers().size() >= startBalancing && testedServer.getPlayers().size() < server.getPlayers().size()) {
                 server = testedServer;
             }
         }
@@ -190,7 +195,7 @@ public class VersionConnector extends Plugin implements Listener {
     }
 
     public void logDebug(String msg) {
-        if(debug)
+        if (debug)
             getLogger().log(Level.INFO, msg);
     }
 
