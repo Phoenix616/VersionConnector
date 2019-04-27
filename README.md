@@ -7,6 +7,7 @@ Development builds can be found on the [Minebench](https://www.minebench.de) Jen
 
 It will fallback to the version with the closest protocol number below the actual client's protocol. You can however set the protocol version directly if you want or submit additions to the [ProtocolVersion](https://github.com/Minebench/VersionConnector/blob/master/src/main/java/de/themoep/versionconnector/ProtocolVersion.java) enum.
 
+- MINECRAFT_1_14 (Protocol version 477)
 - MINECRAFT_1_13_2 (Protocol version 404)
 - MINECRAFT_1_13_1 (Protocol version 401)
 - MINECRAFT_1_13 (Protocol version 393)
