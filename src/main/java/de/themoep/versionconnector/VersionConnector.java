@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /*
  * Licensed under the Nietzsche Public License v0.6
@@ -176,12 +177,14 @@ public class VersionConnector extends Plugin implements Listener {
     private ServerInfo getTargetServer(ServerInfo targetServer, int version, boolean isForge) {
         ConnectorInfo connectorInfo = connectorMap.get(targetServer.getName().toLowerCase());
         if (connectorInfo == null) {
+            logDebug("Server " + targetServer.getName() + " does not have any special connection info set");
             return null;
         }
 
         List<ServerInfo> serverList = connectorInfo.getServers(version, isForge);
         if (serverList == null || serverList.isEmpty() // No servers configured for that version
                 || startBalancing < 0 && serverList.contains(targetServer)) { // No need to balance and the target is already in the list
+            logDebug("No servers found for " + targetServer.getName() + "/" + version + "/forge: " + isForge);
             return null;
         }
 
@@ -191,6 +194,7 @@ public class VersionConnector extends Plugin implements Listener {
                 server = testedServer;
             }
         }
+        logDebug("Selected server " + (server != null ? server.getName() : "null") + " for " + targetServer.getName() + "/" + version + "/forge: " + isForge + " from " + serverList.stream().map(ServerInfo::getName).collect(Collectors.joining(",")));
         return server;
     }
 
