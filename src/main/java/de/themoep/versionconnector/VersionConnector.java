@@ -81,10 +81,13 @@ public class VersionConnector extends Plugin implements Listener {
 
             Configuration serversSection = getConfig().getSection("servers");
             for (String key : serversSection.getKeys()) {
-                loadConnectorInfo(
+                ConnectorInfo connectorInfo = loadConnectorInfo(
                         loadVersionMap(serversSection.getSection(key + ".versions")),
                         loadVersionMap(serversSection.getSection(key + ".forge"))
                 );
+                if (getProxy().getServerInfo(key) != null) {
+                    connectorMap.put(key.toLowerCase(), connectorInfo);
+                }
             }
 
             return true;
@@ -95,12 +98,14 @@ public class VersionConnector extends Plugin implements Listener {
         return false;
     }
 
-    private void loadConnectorInfo(SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
+    private ConnectorInfo loadConnectorInfo(SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
         ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge);
 
         for (ServerInfo server : connectorInfo.getServers()) {
-            connectorMap.put(server.getName().toLowerCase(), connectorInfo);
+            connectorMap.putIfAbsent(server.getName().toLowerCase(), connectorInfo); // Legacy server selection
         }
+
+        return connectorInfo;
     }
 
     private SortedMap<Integer, List<ServerInfo>> loadVersionMap(Configuration section) {
