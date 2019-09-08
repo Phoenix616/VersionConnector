@@ -1,5 +1,5 @@
 debug: true
-# Minumum amount of players that need to be online on one server to start balancing
+# Minimum amount of players that need to be online on one server to start balancing
 # new players to the other server (e.g. between lobby_1_8_a & lobby_1_8_b)
 # Use -1 to disable that feature
 start-balancing: 0
@@ -9,18 +9,18 @@ start-balancing: 0
 #      '34': lobby_for_that_old_version
 #      '1.8': lobby_1_8_a, lobby_1_8_b
 #      '1.9: lobby_1_9
-#      MINECRAFT_1_9_1: lobby_1_9_1
-#      MINECRAFT_1_9_2: lobby_1_9_2
-#      MINECRAFT_1_10: lobby_1_9_2
+#      '1.9.1': lobby_1_9_1
+#      '1.9.2': lobby_1_9_2
+#      '1.10': lobby_1_9_2
 #      UNKNOWN: well_we_dont_know
 #    forge:
-#      MINECRAFT_1_9: forge_lobby_1_9
-#      MINECRAFT_8: forge_lobby_1_8_a, forge_lobby_1_8_b
+#      '1.9': forge_lobby_1_9
+#      '1.8': forge_lobby_1_8_a, forge_lobby_1_8_b
 #  survival:
 #    versions:
-#      MINECRAFT_1_8: survival_1_8
-#      MINECRAFT_1_10: survival_1_10
+#      '1.8': survival_1_8
+#      '1.10': survival_1_10
 #      UNKNOWN: survival_wat
 #    forge:
-#      MINECRAFT_1_9: forge_suvival_1_9
-#      MINECRAFT_8: forge_suvival_1_8_a, forge_suvival_1_8_b
+#      '1.9': forge_suvival_1_9
+#      '1.8': forge_suvival_1_8_a, forge_suvival_1_8_b
