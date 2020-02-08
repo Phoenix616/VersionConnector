@@ -29,6 +29,9 @@ import java.util.Map;
  */
 
 public enum ProtocolVersion {
+    MINECRAFT_1_15_2(578),
+    MINECRAFT_1_15_1(575),
+    MINECRAFT_1_15(573),
     MINECRAFT_1_14_4(498),
     MINECRAFT_1_14_3(490),
     MINECRAFT_1_14_2(485),

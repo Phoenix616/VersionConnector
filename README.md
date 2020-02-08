@@ -7,6 +7,9 @@ Development builds can be found on the [Minebench](https://www.minebench.de) Jen
 
 It will fallback to the version with the closest protocol number below the actual client's protocol. You can however set the protocol version directly if you want or submit additions to the [ProtocolVersion](https://github.com/Minebench/VersionConnector/blob/master/src/main/java/de/themoep/versionconnector/ProtocolVersion.java) enum.
 
+- 1.15.2 (Protocol version 578)
+- 1.15.1 (Protocol version 575)
+- 1.15 (Protocol version 573)
 - 1.14.4 (Protocol version 498)
 - 1.14.3 (Protocol version 490)
 - 1.14.2 (Protocol version 485)
