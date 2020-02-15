@@ -215,4 +215,16 @@ public class VersionConnector extends Plugin implements Listener {
     public Configuration getConfig() {
         return config.getConfiguration();
     }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public Map<String, ConnectorInfo> getConnectorMap() {
+        return connectorMap;
+    }
+
+    public int getStartBalancing() {
+        return startBalancing;
+    }
 }

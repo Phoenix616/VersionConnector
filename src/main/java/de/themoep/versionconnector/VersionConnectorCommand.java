@@ -2,9 +2,9 @@ package de.themoep.versionconnector;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.config.Configuration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /*
  * Licensed under the Nietzsche Public License v0.6
@@ -117,13 +118,7 @@ public class VersionConnectorCommand extends Command {
 
                     for(ProxiedPlayer player : players) {
                         int rawVersion = plugin.getVersion(player);
-                        ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
-                        if (version != ProtocolVersion.UNKNOWN) {
-                            String versionStr = version.toString().replace("MINECRAFT_", "").replace("_", ".");
-                            sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + rawVersion + "/forge: " + player.isForgeUser());
-                        } else {
-                            sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + version + "/" + rawVersion + "/forge: " + player.isForgeUser());
-                        }
+                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + ProtocolVersion.getVersion(rawVersion) + "/" + rawVersion + "/forge: " + player.isForgeUser());
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
@@ -131,49 +126,31 @@ public class VersionConnectorCommand extends Command {
                     sender.sendMessage(ChatColor.RED + "You don't have the permission " + getPermission() + ".config");
                     return;
                 }
-                sender.sendMessage(ChatColor.AQUA+ "Debug: " + ChatColor.YELLOW + plugin.getConfig().getBoolean("debug", true));
+                sender.sendMessage(ChatColor.AQUA+ "Debug: " + ChatColor.YELLOW + plugin.isDebug());
+                sender.sendMessage(ChatColor.AQUA+ "Start balancing: " + ChatColor.YELLOW + plugin.getStartBalancing());
 
-                Configuration versions = plugin.getConfig().getSection("versions");
-                if (!versions.getKeys().isEmpty()) {
-                    sender.sendMessage(ChatColor.YELLOW + "Legacy versions configuration:");
-                    for(String key : versions.getKeys()) {
-                        sender.sendMessage(ChatColor.AQUA + "  " + key + ": " + ChatColor.YELLOW + versions.getString(key));
-                    }
-                }
-                Configuration forge = plugin.getConfig().getSection("forge");
-                if (!forge.getKeys().isEmpty()) {
-                    sender.sendMessage(ChatColor.YELLOW + "Legacy Forge configuration:");
-                    for(String key : forge.getKeys()) {
-                        sender.sendMessage(ChatColor.AQUA + "  " + key + ": " + ChatColor.YELLOW + forge.getString(key));
-                    }
-                }
+                for (Map.Entry<String, ConnectorInfo> entry : plugin.getConnectorMap().entrySet()) {
+                    sender.sendMessage(ChatColor.YELLOW + entry.getKey() + " configuration:");
 
-                Configuration servers = plugin.getConfig().getSection("servers");
-                if (servers.getKeys().size() == 0) {
-                    sender.sendMessage(ChatColor.AQUA + "No servers config.");
-                } else {
-                    for (String key : servers.getKeys()) {
-
-                        Configuration server = servers.getSection(key);
-                        sender.sendMessage(ChatColor.YELLOW + key + " configuration:");
-                        Configuration serverVersions = server.getSection("versions");
-                        if (serverVersions.getKeys().isEmpty()) {
-                            sender.sendMessage(ChatColor.AQUA + "  No versions config.");
-                        } else {
-                            sender.sendMessage(ChatColor.YELLOW + "  Versions:");
-                            for (String serverName : serverVersions.getKeys()) {
-                                sender.sendMessage(ChatColor.AQUA + "    " + serverName + ": " + ChatColor.YELLOW + serverVersions.getString(serverName));
-                            }
+                    if (entry.getValue().getVanillaMap().isEmpty()) {
+                        sender.sendMessage(ChatColor.AQUA + "  No versions config.");
+                    } else {
+                        sender.sendMessage(ChatColor.YELLOW + "  Versions:");
+                        for (Map.Entry<Integer, List<ServerInfo>> versionEntry : entry.getValue().getVanillaMap().entrySet()) {
+                            ProtocolVersion protocolVersion = ProtocolVersion.getVersion(versionEntry.getKey());
+                            sender.sendMessage(ChatColor.AQUA + "    " + (protocolVersion != ProtocolVersion.UNKNOWN ? protocolVersion : versionEntry.getKey()) + ": "
+                                    + ChatColor.YELLOW + versionEntry.getValue().stream().map(ServerInfo::getName).collect(Collectors.joining(", ")));
                         }
+                    }
 
-                        Configuration serverForge = server.getSection("forge");
-                        if (serverForge.getKeys().isEmpty()) {
-                            sender.sendMessage(ChatColor.AQUA + "  No forge config.");
-                        } else {
-                            sender.sendMessage(ChatColor.YELLOW + "  Forge:");
-                            for (String serverName : serverForge.getKeys()) {
-                                sender.sendMessage(ChatColor.AQUA + "    " + serverName + ": " + ChatColor.YELLOW + serverForge.getString(serverName));
-                            }
+                    if (entry.getValue().getVanillaMap().isEmpty()) {
+                        sender.sendMessage(ChatColor.AQUA + "  No forge config.");
+                    } else {
+                        sender.sendMessage(ChatColor.YELLOW + "  Forge:");
+                        for (Map.Entry<Integer, List<ServerInfo>> versionEntry : entry.getValue().getVanillaMap().entrySet()) {
+                            ProtocolVersion protocolVersion = ProtocolVersion.getVersion(versionEntry.getKey());
+                            sender.sendMessage(ChatColor.AQUA + "    " + (protocolVersion != ProtocolVersion.UNKNOWN ? protocolVersion : versionEntry.getKey()) + ": "
+                                    + ChatColor.YELLOW + versionEntry.getValue().stream().map(ServerInfo::getName).collect(Collectors.joining(", ")));
                         }
                     }
                 }

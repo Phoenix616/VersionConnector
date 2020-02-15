@@ -93,4 +93,8 @@ public enum ProtocolVersion {
     public int toInt() {
         return number;
     }
+
+    public String toString() {
+        return name().replace("MINECRAFT_", "").replace("_", ".");
+    }
 }
