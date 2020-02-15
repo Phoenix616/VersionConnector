@@ -9,7 +9,7 @@ import net.md_5.bungee.config.Configuration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,10 +58,10 @@ public class VersionConnectorCommand extends Command {
                     if(plugin.getProxy().getOnlineCount() == 0) {
                         sender.sendMessage(ChatColor.RED + "No player online");
                     } else {
-                        Map<ProtocolVersion, Integer> versionMap = new HashMap<>();
-                        Map<ProtocolVersion, Integer> forgeMap = new HashMap<>();
+                        Map<Integer, Integer> versionMap = new LinkedHashMap<>();
+                        Map<Integer, Integer> forgeMap = new LinkedHashMap<>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-                            ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
+                            int version = plugin.getVersion(player);
                             if(player.isForgeUser()) {
                                 forgeMap.put(version, forgeMap.getOrDefault(version, 0) + 1);
                             } else {
@@ -70,18 +70,24 @@ public class VersionConnectorCommand extends Command {
                         }
 
                         sender.sendMessage(ChatColor.YELLOW + "Player versions:");
-                        for(ProtocolVersion version : ProtocolVersion.values()) {
-                            if(versionMap.containsKey(version)) {
-                                sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + versionMap.get(version));
+                        versionMap.entrySet().stream().sorted(Collections.reverseOrder(Comparator.comparingInt(Map.Entry::getKey))).forEach(e -> {
+                            ProtocolVersion version = ProtocolVersion.getVersion(e.getKey());
+                            if (version != ProtocolVersion.UNKNOWN) {
+                                sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + e.getValue());
+                            } else {
+                                sender.sendMessage(ChatColor.AQUA + String.valueOf(e.getKey()) + ": " + ChatColor.YELLOW + e.getValue());
                             }
-                        }
+                        });
                         if(forgeMap.size() > 0) {
                             sender.sendMessage(ChatColor.YELLOW + "Forge versions:");
-                            for(ProtocolVersion version : ProtocolVersion.values()) {
-                                if(forgeMap.containsKey(version)) {
-                                    sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + forgeMap.get(version));
+                            forgeMap.entrySet().stream().sorted(Collections.reverseOrder(Comparator.comparingInt(Map.Entry::getKey))).forEach(e -> {
+                                ProtocolVersion version = ProtocolVersion.getVersion(e.getKey());
+                                if (version != ProtocolVersion.UNKNOWN) {
+                                    sender.sendMessage(ChatColor.AQUA + version.toString() + ": " + ChatColor.YELLOW + e.getValue());
+                                } else {
+                                    sender.sendMessage(ChatColor.AQUA + String.valueOf(e.getKey()) + ": " + ChatColor.YELLOW + e.getValue());
                                 }
-                            }
+                            });
                         }
                     }
                 } else {
@@ -107,14 +113,17 @@ public class VersionConnectorCommand extends Command {
                         }
                     }
 
-                    players.sort(Collections.reverseOrder(
-                            Comparator.comparingInt(p -> p.getPendingConnection().getVersion())
-                    ));
+                    players.sort(Collections.reverseOrder(Comparator.comparingInt(plugin::getVersion)));
 
                     for(ProxiedPlayer player : players) {
-                        ProtocolVersion version = ProtocolVersion.getVersion(player.getPendingConnection().getVersion());
-                        String versionStr = version.toString().replace("MINECRAFT_", "").replace("_", ".");
-                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + version.toInt() + "/forge: " + player.isForgeUser());
+                        int rawVersion = plugin.getVersion(player);
+                        ProtocolVersion version = ProtocolVersion.getVersion(rawVersion);
+                        if (version != ProtocolVersion.UNKNOWN) {
+                            String versionStr = version.toString().replace("MINECRAFT_", "").replace("_", ".");
+                            sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + versionStr + "/" + rawVersion + "/forge: " + player.isForgeUser());
+                        } else {
+                            sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + version + "/" + rawVersion + "/forge: " + player.isForgeUser());
+                        }
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {

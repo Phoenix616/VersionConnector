@@ -164,7 +164,7 @@ public class VersionConnector extends Plugin implements Listener {
         }
     }
 
-    private int getVersion(ProxiedPlayer player) {
+    public int getVersion(ProxiedPlayer player) {
         if (isViaVersionAvailable) {
             return Via.getAPI().getPlayerVersion(player.getUniqueId());
         }

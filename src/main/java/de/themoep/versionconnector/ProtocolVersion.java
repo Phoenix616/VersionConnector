@@ -75,12 +75,19 @@ public enum ProtocolVersion {
         if (protocolVersion != null) {
             return protocolVersion;
         }
-        for(ProtocolVersion version : values()) {
-            if(version.toInt() <= versionNumber) {
-                return version;
+        return UNKNOWN;
+    }
+
+    public static ProtocolVersion matchVersion(int versionNumber) {
+        ProtocolVersion protocolVersion = getVersion(versionNumber);
+        if (protocolVersion == UNKNOWN) {
+            for (ProtocolVersion version : values()) {
+                if (version.toInt() <= versionNumber) {
+                    return version;
+                }
             }
         }
-        return UNKNOWN;
+        return protocolVersion;
     }
 
     public int toInt() {
