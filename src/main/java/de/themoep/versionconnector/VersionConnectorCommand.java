@@ -63,7 +63,7 @@ public class VersionConnectorCommand extends Command {
                         Map<Integer, Integer> forgeMap = new LinkedHashMap<>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
                             int version = plugin.getVersion(player);
-                            if(player.isForgeUser()) {
+                            if (plugin.isForge(player)) {
                                 forgeMap.put(version, forgeMap.getOrDefault(version, 0) + 1);
                             } else {
                                 versionMap.put(version, versionMap.getOrDefault(version, 0) + 1);
@@ -118,7 +118,7 @@ public class VersionConnectorCommand extends Command {
 
                     for(ProxiedPlayer player : players) {
                         int rawVersion = plugin.getVersion(player);
-                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + ProtocolVersion.getVersion(rawVersion) + "/" + rawVersion + "/forge: " + player.isForgeUser());
+                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + ProtocolVersion.getVersion(rawVersion) + "/" + rawVersion + "/forge: " + plugin.isForge(player));
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
