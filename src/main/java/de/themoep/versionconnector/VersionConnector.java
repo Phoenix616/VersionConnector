@@ -1,23 +1,27 @@
 package de.themoep.versionconnector;
 
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.event.PlayerDisconnectEvent;
+import net.md_5.bungee.api.event.PluginMessageEvent;
 import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
 import us.myles.ViaVersion.api.Via;
-import us.myles.ViaVersion.api.ViaAPI;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -56,6 +60,8 @@ public class VersionConnector extends Plugin implements Listener {
     private boolean isViaVersionAvailable = false;
 
     private Map<String, ConnectorInfo> connectorMap;
+
+    private Map<UUID, Boolean> isForgeMap = new ConcurrentHashMap<>();
 
     public void onEnable() {
         enabled = loadConfig();
@@ -155,12 +161,43 @@ public class VersionConnector extends Plugin implements Listener {
             return;
         }
         int version = getVersion(e.getPlayer());
+        boolean isForge = isForge(e.getPlayer());
 
-        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + e.getPlayer().isForgeUser());
+        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge);
 
-        ServerInfo targetServer = getTargetServer(e.getTarget(), version, e.getPlayer().isForgeUser());
+        ServerInfo targetServer = getTargetServer(e.getTarget(), version, isForge);
         if (targetServer != null) {
             e.setTarget(targetServer);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDisconnect(PlayerDisconnectEvent event) {
+        isForgeMap.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onPluginMessage(PluginMessageEvent event) {
+        if (event.getSender() instanceof ProxiedPlayer
+                && !((ProxiedPlayer) event.getSender()).isForgeUser()
+                && event.getTag().equals("minecraft:brand")) {
+            ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
+            String brand = in.readUTF();
+            if (brand.equals("forge")) {
+                ProxiedPlayer p = (ProxiedPlayer) event.getSender();
+                isForgeMap.put(p.getUniqueId(), true);
+                if (p.getServer() != null) {
+                    // Player already connected :S Try to move them to the more correct server if it exists
+                    int version = getVersion(p);
+
+                    logDebug(p.getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + true);
+
+                    ServerInfo targetServer = getTargetServer(p.getServer().getInfo(), version, true);
+                    if (targetServer != null && targetServer != p.getServer().getInfo()) {
+                        p.connect(targetServer);
+                    }
+                }
+            }
         }
     }
 
@@ -170,6 +207,10 @@ public class VersionConnector extends Plugin implements Listener {
         }
 
         return player.getPendingConnection().getVersion();
+    }
+
+    public boolean isForge(ProxiedPlayer player) {
+        return player.isForgeUser() || isForgeMap.getOrDefault(player.getUniqueId(), false);
     }
 
     /**
