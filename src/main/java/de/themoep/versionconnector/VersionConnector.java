@@ -1,8 +1,8 @@
 package de.themoep.versionconnector;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 import de.themoep.bungeeplugin.FileConfiguration;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
@@ -12,6 +12,8 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.protocol.DefinedPacket;
+import net.md_5.bungee.protocol.OverflowPacketException;
 import us.myles.ViaVersion.api.Via;
 
 import java.io.IOException;
@@ -181,9 +183,16 @@ public class VersionConnector extends Plugin implements Listener {
     public void onPluginMessage(PluginMessageEvent event) {
         if (event.getSender() instanceof ProxiedPlayer
                 && !((ProxiedPlayer) event.getSender()).isForgeUser()
-                && event.getTag().equals("minecraft:brand")) {
-            ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
-            String brand = in.readUTF();
+                && event.getTag().equals("minecraft:brand")
+                && event.getData().length > 0) {
+            ByteBuf in = Unpooled.wrappedBuffer(event.getData());
+            String brand = "";
+            try {
+                brand = DefinedPacket.readString(in);
+            } catch (IndexOutOfBoundsException | OverflowPacketException e) {
+                logDebug("Invalid brand data sent! (length: " + event.getData().length + ") " + e.getMessage());
+            }
+            in.release();
             if (brand.equals("forge")) {
                 ProxiedPlayer p = (ProxiedPlayer) event.getSender();
                 isForgeMap.put(p.getUniqueId(), true);
