@@ -143,11 +143,11 @@ public class VersionConnectorCommand extends Command {
                         }
                     }
 
-                    if (entry.getValue().getVanillaMap().isEmpty()) {
+                    if (entry.getValue().getForgeMap().isEmpty()) {
                         sender.sendMessage(ChatColor.AQUA + "  No forge config.");
                     } else {
                         sender.sendMessage(ChatColor.YELLOW + "  Forge:");
-                        for (Map.Entry<Integer, List<ServerInfo>> versionEntry : entry.getValue().getVanillaMap().entrySet()) {
+                        for (Map.Entry<Integer, List<ServerInfo>> versionEntry : entry.getValue().getForgeMap().entrySet()) {
                             ProtocolVersion protocolVersion = ProtocolVersion.getVersion(versionEntry.getKey());
                             sender.sendMessage(ChatColor.AQUA + "    " + (protocolVersion != ProtocolVersion.UNKNOWN ? protocolVersion : versionEntry.getKey()) + ": "
                                     + ChatColor.YELLOW + versionEntry.getValue().stream().map(ServerInfo::getName).collect(Collectors.joining(", ")));
