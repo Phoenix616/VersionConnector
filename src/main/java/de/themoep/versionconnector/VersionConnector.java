@@ -181,6 +181,10 @@ public class VersionConnector extends Plugin implements Listener {
 
     @EventHandler
     public void onPluginMessage(PluginMessageEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        
         if (event.getSender() instanceof ProxiedPlayer
                 && !((ProxiedPlayer) event.getSender()).isForgeUser()
                 && event.getTag().equals("minecraft:brand")
