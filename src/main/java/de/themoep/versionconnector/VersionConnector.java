@@ -13,7 +13,6 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.protocol.DefinedPacket;
-import net.md_5.bungee.protocol.OverflowPacketException;
 import us.myles.ViaVersion.api.Via;
 
 import java.io.IOException;
@@ -62,6 +61,8 @@ public class VersionConnector extends Plugin implements Listener {
 
     private boolean isViaVersionAvailable = false;
 
+    private ConnectorInfo joinConnector = null;
+
     private Map<String, ConnectorInfo> connectorMap;
 
     private Map<UUID, Boolean> isForgeMap = new ConcurrentHashMap<>();
@@ -81,6 +82,13 @@ public class VersionConnector extends Plugin implements Listener {
             debug = getConfig().getBoolean("debug", true);
             startBalancing = getConfig().getInt("start-balancing", 0);
             connectorMap = new HashMap<>();
+
+            if (getConfig().contains("join")) {
+                joinConnector = new ConnectorInfo(
+                        loadVersionMap(getConfig().getSection("join.versions")),
+                        loadVersionMap(getConfig().getSection("join.forge"))
+                );
+            }
 
             // Legacy config
             loadConnectorInfo(
@@ -168,9 +176,20 @@ public class VersionConnector extends Plugin implements Listener {
 
         logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge);
 
-        ServerInfo targetServer = getTargetServer(e.getTarget(), version, isForge);
-        if (targetServer != null) {
-            e.setTarget(targetServer);
+        ConnectorInfo connectorInfo = null;
+        if (e.getPlayer().getServer() == null) {
+            connectorInfo = joinConnector;
+        }
+
+        if (connectorInfo == null) {
+            connectorInfo = getConnector(e.getTarget());
+        }
+
+        if (connectorInfo != null) {
+            ServerInfo targetServer = getTargetServer(connectorInfo, e.getTarget(), version, isForge);
+            if (targetServer != null) {
+                e.setTarget(targetServer);
+            }
         }
     }
 
@@ -189,7 +208,7 @@ public class VersionConnector extends Plugin implements Listener {
             String brand = "";
             try {
                 brand = DefinedPacket.readString(in);
-            } catch (IndexOutOfBoundsException | OverflowPacketException e) {
+            } catch (Exception e) {
                 logDebug("Invalid brand data sent! (length: " + event.getData().length + ") " + e.getMessage());
             }
             in.release();
@@ -202,9 +221,12 @@ public class VersionConnector extends Plugin implements Listener {
 
                     logDebug(p.getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + true);
 
-                    ServerInfo targetServer = getTargetServer(p.getServer().getInfo(), version, true);
-                    if (targetServer != null && targetServer != p.getServer().getInfo()) {
-                        p.connect(targetServer);
+                    ConnectorInfo connectorInfo = getConnector(p.getServer().getInfo());
+                    if (connectorInfo != null) {
+                        ServerInfo targetServer = getTargetServer(connectorInfo, p.getServer().getInfo(), version, true);
+                        if (targetServer != null && targetServer != p.getServer().getInfo()) {
+                            p.connect(targetServer);
+                        }
                     }
                 }
             }
@@ -226,17 +248,26 @@ public class VersionConnector extends Plugin implements Listener {
     /**
      * Calculate the target server
      * @param targetServer The server that is being connected to
-     * @param version      The protocol version of the player'client
-     * @param isForge      Whether or not the player is using a forge client
      * @return The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
      */
-    private ServerInfo getTargetServer(ServerInfo targetServer, int version, boolean isForge) {
+    private ConnectorInfo getConnector(ServerInfo targetServer) {
         ConnectorInfo connectorInfo = connectorMap.get(targetServer.getName().toLowerCase());
         if (connectorInfo == null) {
             logDebug("Server " + targetServer.getName() + " does not have any special connection info set");
             return null;
         }
+        return connectorInfo;
+    }
 
+    /**
+     * Calculate the target server
+     * @param connectorInfo The ConnectorInfo to get the target server from
+     * @param targetServer  The server that is being connected to
+     * @param version       The protocol version of the player'client
+     * @param isForge       Whether or not the player is using a forge client
+     * @return The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
+     */
+    private ServerInfo getTargetServer(ConnectorInfo connectorInfo, ServerInfo targetServer, int version, boolean isForge) {
         List<ServerInfo> serverList = connectorInfo.getServers(version, isForge);
         if (serverList == null || serverList.isEmpty() // No servers configured for that version
                 || startBalancing < 0 && serverList.contains(targetServer)) { // No need to balance and the target is already in the list
