@@ -80,11 +80,13 @@ public class VersionConnector extends Plugin implements Listener {
             config = new FileConfiguration(this, "config.yml");
             debug = getConfig().getBoolean("debug", true);
             startBalancing = getConfig().getInt("start-balancing", 0);
+            joinConnectorMap = new HashMap<>();
             connectorMap = new HashMap<>();
 
             Configuration joinSection = getConfig().getSection("join");
             for (String key : joinSection.getKeys()) {
                 ConnectorInfo connectorInfo = loadConnectorInfo(
+                        joinConnectorMap,
                         loadVersionMap(joinSection.getSection(key + ".versions")),
                         loadVersionMap(joinSection.getSection(key + ".forge"))
                 );
@@ -95,6 +97,7 @@ public class VersionConnector extends Plugin implements Listener {
 
             // Legacy config
             loadConnectorInfo(
+                    connectorMap,
                     loadVersionMap(getConfig().getSection("versions")),
                     loadVersionMap(getConfig().getSection("forge"))
             );
@@ -102,6 +105,7 @@ public class VersionConnector extends Plugin implements Listener {
             Configuration serversSection = getConfig().getSection("servers");
             for (String key : serversSection.getKeys()) {
                 ConnectorInfo connectorInfo = loadConnectorInfo(
+                        connectorMap,
                         loadVersionMap(serversSection.getSection(key + ".versions")),
                         loadVersionMap(serversSection.getSection(key + ".forge"))
                 );
@@ -118,7 +122,7 @@ public class VersionConnector extends Plugin implements Listener {
         return false;
     }
 
-    private ConnectorInfo loadConnectorInfo(SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
+    private ConnectorInfo loadConnectorInfo(Map<String, ConnectorInfo> connectorMap, SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
         ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge);
 
         for (ServerInfo server : connectorInfo.getServers()) {
