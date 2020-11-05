@@ -17,14 +17,15 @@ debug: false
 # new players to the other server (e.g. between lobby_1_8_a & lobby_1_8_b)
 start-balancing: 0
 join:
-  versions:
-    '34': lobby_prot_34 # Lobby for specific protocol version
-    '1_8': lobby_1_8_a, lobby_1_8_b # Lobbies for 1.8
-    '1_9': lobby_1_9 # Lobby for 1.9
-    UNKNOWN: well_we_dont_know # Lobby for an Unknown version (not a fallback if no config for version was found!)
-  forge:
-    '1_9': forge_lobby_1_9
-    '1_8': forge_lobby_1_8_a, forge_lobby_1_8_b
+  lobby:
+    versions:
+      '34': lobby_prot_34 # Lobby for specific protocol version
+      '1_8': lobby_1_8_a, lobby_1_8_b # Lobbies for 1.8
+      '1_9': lobby_1_9 # Lobby for 1.9
+      UNKNOWN: well_we_dont_know # Lobby for an Unknown version (not a fallback if no config for version was found!)
+    forge:
+      '1_9': forge_lobby_1_9
+      '1_8': forge_lobby_1_8_a, forge_lobby_1_8_b
 servers:
   survival:
     versions:

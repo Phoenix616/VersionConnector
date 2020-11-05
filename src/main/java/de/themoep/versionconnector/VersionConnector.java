@@ -61,8 +61,7 @@ public class VersionConnector extends Plugin implements Listener {
 
     private boolean isViaVersionAvailable = false;
 
-    private ConnectorInfo joinConnector = null;
-
+    private Map<String, ConnectorInfo> joinConnectorMap;
     private Map<String, ConnectorInfo> connectorMap;
 
     private Map<UUID, Boolean> isForgeMap = new ConcurrentHashMap<>();
@@ -83,11 +82,15 @@ public class VersionConnector extends Plugin implements Listener {
             startBalancing = getConfig().getInt("start-balancing", 0);
             connectorMap = new HashMap<>();
 
-            if (getConfig().contains("join")) {
-                joinConnector = new ConnectorInfo(
-                        loadVersionMap(getConfig().getSection("join.versions")),
-                        loadVersionMap(getConfig().getSection("join.forge"))
+            Configuration joinSection = getConfig().getSection("join");
+            for (String key : joinSection.getKeys()) {
+                ConnectorInfo connectorInfo = loadConnectorInfo(
+                        loadVersionMap(joinSection.getSection(key + ".versions")),
+                        loadVersionMap(joinSection.getSection(key + ".forge"))
                 );
+                if (getProxy().getServerInfo(key) != null) {
+                    joinConnectorMap.put(key.toLowerCase(), connectorInfo);
+                }
             }
 
             // Legacy config
@@ -174,15 +177,15 @@ public class VersionConnector extends Plugin implements Listener {
         int version = getVersion(e.getPlayer());
         boolean isForge = isForge(e.getPlayer());
 
-        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge);
+        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge + "/join: " + (e.getPlayer().getServer() == null));
 
         ConnectorInfo connectorInfo = null;
         if (e.getPlayer().getServer() == null) {
-            connectorInfo = joinConnector;
+            connectorInfo = joinConnectorMap.get(e.getTarget().getName().toLowerCase());
         }
 
         if (connectorInfo == null) {
-            connectorInfo = getConnector(e.getTarget());
+            connectorInfo = connectorMap.get(e.getTarget().getName().toLowerCase());
         }
 
         if (connectorInfo != null) {
@@ -190,6 +193,8 @@ public class VersionConnector extends Plugin implements Listener {
             if (targetServer != null) {
                 e.setTarget(targetServer);
             }
+        } else {
+            logDebug("Server " + e.getTarget().getName() + " does not have any special connection info set");
         }
     }
 
@@ -221,7 +226,7 @@ public class VersionConnector extends Plugin implements Listener {
 
                     logDebug(p.getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + true);
 
-                    ConnectorInfo connectorInfo = getConnector(p.getServer().getInfo());
+                    ConnectorInfo connectorInfo = connectorMap.get(p.getServer().getInfo().getName().toLowerCase());
                     if (connectorInfo != null) {
                         ServerInfo targetServer = getTargetServer(connectorInfo, p.getServer().getInfo(), version, true);
                         if (targetServer != null && targetServer != p.getServer().getInfo()) {
@@ -243,20 +248,6 @@ public class VersionConnector extends Plugin implements Listener {
 
     public boolean isForge(ProxiedPlayer player) {
         return player.isForgeUser() || isForgeMap.getOrDefault(player.getUniqueId(), false);
-    }
-
-    /**
-     * Calculate the target server
-     * @param targetServer The server that is being connected to
-     * @return The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
-     */
-    private ConnectorInfo getConnector(ServerInfo targetServer) {
-        ConnectorInfo connectorInfo = connectorMap.get(targetServer.getName().toLowerCase());
-        if (connectorInfo == null) {
-            logDebug("Server " + targetServer.getName() + " does not have any special connection info set");
-            return null;
-        }
-        return connectorInfo;
     }
 
     /**
