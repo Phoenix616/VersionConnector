@@ -83,15 +83,17 @@ public class VersionConnector extends Plugin implements Listener {
             joinConnectorMap = new HashMap<>();
             connectorMap = new HashMap<>();
 
-            Configuration joinSection = getConfig().getSection("join");
-            for (String key : joinSection.getKeys()) {
-                ConnectorInfo connectorInfo = loadConnectorInfo(
-                        joinConnectorMap,
-                        loadVersionMap(joinSection.getSection(key + ".versions")),
-                        loadVersionMap(joinSection.getSection(key + ".forge"))
-                );
-                if (getProxy().getServerInfo(key) != null) {
-                    joinConnectorMap.put(key.toLowerCase(), connectorInfo);
+            if (getConfig().contains("join")) {
+                Configuration joinSection = getConfig().getSection("join");
+                for (String key : joinSection.getKeys()) {
+                    ConnectorInfo connectorInfo = loadConnectorInfo(
+                            joinConnectorMap,
+                            loadVersionMap(joinSection.getSection(key + ".versions")),
+                            loadVersionMap(joinSection.getSection(key + ".forge"))
+                    );
+                    if (getProxy().getServerInfo(key) != null) {
+                        joinConnectorMap.put(key.toLowerCase(), connectorInfo);
+                    }
                 }
             }
 
@@ -102,15 +104,17 @@ public class VersionConnector extends Plugin implements Listener {
                     loadVersionMap(getConfig().getSection("forge"))
             );
 
-            Configuration serversSection = getConfig().getSection("servers");
-            for (String key : serversSection.getKeys()) {
-                ConnectorInfo connectorInfo = loadConnectorInfo(
-                        connectorMap,
-                        loadVersionMap(serversSection.getSection(key + ".versions")),
-                        loadVersionMap(serversSection.getSection(key + ".forge"))
-                );
-                if (getProxy().getServerInfo(key) != null) {
-                    connectorMap.put(key.toLowerCase(), connectorInfo);
+            if (getConfig().contains("servers")) {
+                Configuration serversSection = getConfig().getSection("servers");
+                for (String key : serversSection.getKeys()) {
+                    ConnectorInfo connectorInfo = loadConnectorInfo(
+                            connectorMap,
+                            loadVersionMap(serversSection.getSection(key + ".versions")),
+                            loadVersionMap(serversSection.getSection(key + ".forge"))
+                    );
+                    if (getProxy().getServerInfo(key) != null) {
+                        connectorMap.put(key.toLowerCase(), connectorInfo);
+                    }
                 }
             }
 
