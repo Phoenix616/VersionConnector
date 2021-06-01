@@ -29,18 +29,21 @@ import net.md_5.bungee.api.config.ServerInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 
 public class ConnectorInfo {
 
     private final SortedMap<Integer, List<ServerInfo>> vanillaMap;
     private final SortedMap<Integer, List<ServerInfo>> forgeMap;
+    private final Map<String[], List<ServerInfo>> modMap;
 
     private final List<ServerInfo> serverList;
 
-    public ConnectorInfo(SortedMap<Integer, List<ServerInfo>> vanillaMap, SortedMap<Integer, List<ServerInfo>> forgeMap) {
+    public ConnectorInfo(SortedMap<Integer, List<ServerInfo>> vanillaMap, SortedMap<Integer, List<ServerInfo>> forgeMap, Map<String[], List<ServerInfo>> modMap) {
         this.vanillaMap = vanillaMap;
         this.forgeMap = forgeMap;
+        this.modMap = modMap;
 
         serverList = new ArrayList<>();
 
@@ -56,13 +59,38 @@ public class ConnectorInfo {
         return forgeMap;
     }
 
+    public Map<String[], List<ServerInfo>> getModMap() {
+        return modMap;
+    }
+
     /**
      * Get the list of servers that matches the inputted parameters
      * @param version       The protocol version of the player's client
      * @param isForge       Whether or not the player is using a forge client
+     * @param modList
      * @return The list of servers that matches the inputted parameters
      */
-    public List<ServerInfo> getServers(int version, boolean isForge) {
+    public List<ServerInfo> getServers(int version, boolean isForge, Map<String, String> modList) {
+        if (!modList.isEmpty()) {
+            List<ServerInfo> bestMatch = null;
+            int matchedMods = 0;
+            for (Map.Entry<String[], List<ServerInfo>> entry : modMap.entrySet()) {
+                int matched = 0;
+                for (String modName : entry.getKey()) {
+                    if (modList.containsKey(modName)) {
+                        matched++;
+                    }
+                }
+                if (matched > matchedMods) {
+                    bestMatch = entry.getValue();
+                    matchedMods = matched;
+                }
+            }
+            if (bestMatch != null) {
+                return bestMatch;
+            }
+        }
+
         SortedMap<Integer, List<ServerInfo>> map = isForge ? forgeMap : vanillaMap;
         List<ServerInfo> serverList = map.get(version);
         if (serverList == null) {

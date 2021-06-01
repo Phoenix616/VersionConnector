@@ -61,12 +61,17 @@ public class VersionConnectorCommand extends Command {
                     } else {
                         Map<Integer, Integer> versionMap = new LinkedHashMap<>();
                         Map<Integer, Integer> forgeMap = new LinkedHashMap<>();
+                        Map<String, Integer> modsMap = new LinkedHashMap<>();
                         for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
                             int version = plugin.getVersion(player);
                             if (plugin.isForge(player)) {
                                 forgeMap.put(version, forgeMap.getOrDefault(version, 0) + 1);
                             } else {
                                 versionMap.put(version, versionMap.getOrDefault(version, 0) + 1);
+                            }
+                            if (player.getModList().size() > 0) {
+                                String mods = player.getModList().keySet().stream().sorted(String::compareToIgnoreCase).collect(Collectors.joining(","));
+                                modsMap.put(mods, modsMap.getOrDefault(mods, 0) + 1);
                             }
                         }
 
@@ -89,6 +94,11 @@ public class VersionConnectorCommand extends Command {
                                     sender.sendMessage(ChatColor.AQUA + String.valueOf(e.getKey()) + ": " + ChatColor.YELLOW + e.getValue());
                                 }
                             });
+                        }
+                        if (modsMap.size() > 0) {
+                            sender.sendMessage(ChatColor.YELLOW + "Mods:");
+                            modsMap.entrySet().stream().sorted(Collections.reverseOrder(Comparator.comparingInt(Map.Entry::getValue)))
+                                    .forEach(e -> sender.sendMessage(ChatColor.AQUA + e.getKey() + ": " + ChatColor.YELLOW + e.getValue()));
                         }
                     }
                 } else {
@@ -118,7 +128,7 @@ public class VersionConnectorCommand extends Command {
 
                     for(ProxiedPlayer player : players) {
                         int rawVersion = plugin.getVersion(player);
-                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + ProtocolVersion.getVersion(rawVersion) + "/" + rawVersion + "/forge: " + plugin.isForge(player));
+                        sender.sendMessage(ChatColor.AQUA + player.getName() + ChatColor.YELLOW + ": " + ProtocolVersion.getVersion(rawVersion) + "/" + rawVersion + "/forge: " + plugin.isForge(player) + "/mods: " + player.getModList().entrySet().stream().map(e -> e.getKey() + "(" + e.getValue() + ")").collect(Collectors.joining(", ")));
                     }
                 }
             } else if("config".equalsIgnoreCase(args[0])) {
@@ -151,6 +161,16 @@ public class VersionConnectorCommand extends Command {
                             ProtocolVersion protocolVersion = ProtocolVersion.getVersion(versionEntry.getKey());
                             sender.sendMessage(ChatColor.AQUA + "    " + (protocolVersion != ProtocolVersion.UNKNOWN ? protocolVersion : versionEntry.getKey()) + ": "
                                     + ChatColor.YELLOW + versionEntry.getValue().stream().map(ServerInfo::getName).collect(Collectors.joining(", ")));
+                        }
+                    }
+
+                    if (entry.getValue().getModMap().isEmpty()) {
+                        sender.sendMessage(ChatColor.AQUA + "  No mods config.");
+                    } else {
+                        sender.sendMessage(ChatColor.YELLOW + "  Mods:");
+                        for (Map.Entry<String[], List<ServerInfo>> modEntry : entry.getValue().getModMap().entrySet()) {
+                            sender.sendMessage(ChatColor.AQUA + "    " + String.join(",", modEntry.getKey()) + ": "
+                                    + ChatColor.YELLOW + modEntry.getValue().stream().map(ServerInfo::getName).collect(Collectors.joining(", ")));
                         }
                     }
                 }

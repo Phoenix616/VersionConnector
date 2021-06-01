@@ -26,6 +26,8 @@ join:
     forge:
       '1_9': forge_lobby_1_9
       '1_8': forge_lobby_1_8_a, forge_lobby_1_8_b
+    mods:
+      "modname1,modname2": mod_server
 servers:
   survival:
     versions:
@@ -35,4 +37,6 @@ servers:
     forge:
       '1_9': forge_suvival_1_9
       '1_8': forge_suvival_1_8_a, forge_suvival_1_8_b
+    mods:
+      "modname1,modname2": mod_server
 ```

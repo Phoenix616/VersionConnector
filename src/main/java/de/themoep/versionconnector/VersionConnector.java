@@ -18,6 +18,7 @@ import us.myles.ViaVersion.api.Via;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -89,8 +90,8 @@ public class VersionConnector extends Plugin implements Listener {
                     ConnectorInfo connectorInfo = loadConnectorInfo(
                             joinConnectorMap,
                             loadVersionMap(joinSection.getSection(key + ".versions")),
-                            loadVersionMap(joinSection.getSection(key + ".forge"))
-                    );
+                            loadVersionMap(joinSection.getSection(key + ".forge")),
+                            loadModsMap(joinSection.getSection(key + ".mods")));
                     if (getProxy().getServerInfo(key) != null) {
                         joinConnectorMap.put(key.toLowerCase(), connectorInfo);
                     }
@@ -101,8 +102,8 @@ public class VersionConnector extends Plugin implements Listener {
             loadConnectorInfo(
                     connectorMap,
                     loadVersionMap(getConfig().getSection("versions")),
-                    loadVersionMap(getConfig().getSection("forge"))
-            );
+                    loadVersionMap(getConfig().getSection("forge")),
+                    loadModsMap(getConfig().getSection("mods")));
 
             if (getConfig().contains("servers")) {
                 Configuration serversSection = getConfig().getSection("servers");
@@ -110,7 +111,8 @@ public class VersionConnector extends Plugin implements Listener {
                     ConnectorInfo connectorInfo = loadConnectorInfo(
                             connectorMap,
                             loadVersionMap(serversSection.getSection(key + ".versions")),
-                            loadVersionMap(serversSection.getSection(key + ".forge"))
+                            loadVersionMap(serversSection.getSection(key + ".forge")),
+                            loadModsMap(serversSection.getSection(key + ".mods"))
                     );
                     if (getProxy().getServerInfo(key) != null) {
                         connectorMap.put(key.toLowerCase(), connectorInfo);
@@ -126,8 +128,8 @@ public class VersionConnector extends Plugin implements Listener {
         return false;
     }
 
-    private ConnectorInfo loadConnectorInfo(Map<String, ConnectorInfo> connectorMap, SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge) {
-        ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge);
+    private ConnectorInfo loadConnectorInfo(Map<String, ConnectorInfo> connectorMap, SortedMap<Integer, List<ServerInfo>> versions, SortedMap<Integer, List<ServerInfo>> forge, Map<String[], List<ServerInfo>> mods) {
+        ConnectorInfo connectorInfo = new ConnectorInfo(versions, forge, mods);
 
         for (ServerInfo server : connectorInfo.getServers()) {
             connectorMap.putIfAbsent(server.getName().toLowerCase(), connectorInfo); // Legacy server selection
@@ -177,6 +179,33 @@ public class VersionConnector extends Plugin implements Listener {
         return map;
     }
 
+    private Map<String[], List<ServerInfo>> loadModsMap(Configuration section) {
+        Map<String[], List<ServerInfo>> map = new LinkedHashMap<>();
+        if (section == null) {
+            return map;
+        }
+        for (String modsStr : section.getKeys()) {
+            String[] mods = modsStr.split(",");
+            String serverStr = section.getString(modsStr, null);
+            if (serverStr != null && !serverStr.isEmpty()) {
+                String[] serverNames = serverStr.split(",");
+                List<ServerInfo> serverList = new ArrayList<>();
+                for (String serverName : serverNames) {
+                    ServerInfo server = getProxy().getServerInfo(serverName.trim());
+                    if (server != null) {
+                        serverList.add(server);
+                    } else {
+                        getLogger().warning(serverStr + " is defined for mods " + modsStr + " but there is no server with that name?");
+                    }
+                }
+                if (!serverList.isEmpty()) {
+                    map.put(mods, serverList);
+                }
+            }
+        }
+        return map;
+    }
+
     @EventHandler
     public void onPlayerConnect(ServerConnectEvent e) {
         if (!isEnabled() || e.isCancelled()) {
@@ -184,8 +213,9 @@ public class VersionConnector extends Plugin implements Listener {
         }
         int version = getVersion(e.getPlayer());
         boolean isForge = isForge(e.getPlayer());
+        Map<String, String> modList = e.getPlayer().getModList();
 
-        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge + "/join: " + (e.getPlayer().getServer() == null));
+        logDebug(e.getPlayer().getName() + "'s version: " + version + " (" + ProtocolVersion.getVersion(version) + ")/forge: " + isForge + "/mods: " + modList.size() + "/join: " + (e.getPlayer().getServer() == null));
 
         ConnectorInfo connectorInfo = null;
         if (e.getPlayer().getServer() == null) {
@@ -197,7 +227,7 @@ public class VersionConnector extends Plugin implements Listener {
         }
 
         if (connectorInfo != null) {
-            ServerInfo targetServer = getTargetServer(connectorInfo, e.getTarget(), version, isForge);
+            ServerInfo targetServer = getTargetServer(connectorInfo, e.getTarget(), version, isForge, modList);
             if (targetServer != null) {
                 e.setTarget(targetServer);
             }
@@ -236,7 +266,7 @@ public class VersionConnector extends Plugin implements Listener {
 
                     ConnectorInfo connectorInfo = connectorMap.get(p.getServer().getInfo().getName().toLowerCase());
                     if (connectorInfo != null) {
-                        ServerInfo targetServer = getTargetServer(connectorInfo, p.getServer().getInfo(), version, true);
+                        ServerInfo targetServer = getTargetServer(connectorInfo, p.getServer().getInfo(), version, true, ((ProxiedPlayer) event.getSender()).getModList());
                         if (targetServer != null && targetServer != p.getServer().getInfo()) {
                             p.connect(targetServer);
                         }
@@ -258,16 +288,21 @@ public class VersionConnector extends Plugin implements Listener {
         return player.isForgeUser() || isForgeMap.getOrDefault(player.getUniqueId(), false);
     }
 
+    public Map<String, String> getMods(ProxiedPlayer player) {
+        return player.getModList();
+    }
+
     /**
      * Calculate the target server
      * @param connectorInfo The ConnectorInfo to get the target server from
      * @param targetServer  The server that is being connected to
      * @param version       The protocol version of the player'client
      * @param isForge       Whether or not the player is using a forge client
+     * @param modList
      * @return The server that the player should be connecting to or <tt>null</tt> if it shouldn't be changed at all
      */
-    private ServerInfo getTargetServer(ConnectorInfo connectorInfo, ServerInfo targetServer, int version, boolean isForge) {
-        List<ServerInfo> serverList = connectorInfo.getServers(version, isForge);
+    private ServerInfo getTargetServer(ConnectorInfo connectorInfo, ServerInfo targetServer, int version, boolean isForge, Map<String, String> modList) {
+        List<ServerInfo> serverList = connectorInfo.getServers(version, isForge, modList);
         if (serverList == null || serverList.isEmpty() // No servers configured for that version
                 || startBalancing < 0 && serverList.contains(targetServer)) { // No need to balance and the target is already in the list
             logDebug("No servers found for " + targetServer.getName() + "/" + version + "/forge: " + isForge);
@@ -280,7 +315,7 @@ public class VersionConnector extends Plugin implements Listener {
                 server = testedServer;
             }
         }
-        logDebug("Selected server " + (server != null ? server.getName() : "null") + " for " + targetServer.getName() + "/" + version + "/forge: " + isForge + " from " + serverList.stream().map(ServerInfo::getName).collect(Collectors.joining(",")));
+        logDebug("Selected server " + (server != null ? server.getName() : "null") + " for " + targetServer.getName() + "/" + version + "/forge: " + isForge + "/mods: " + modList.size() + " from " + serverList.stream().map(ServerInfo::getName).collect(Collectors.joining(",")));
         return server;
     }
 
