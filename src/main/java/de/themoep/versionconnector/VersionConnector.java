@@ -13,6 +13,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.protocol.DefinedPacket;
+import net.md_5.bungee.protocol.ProtocolConstants;
 import us.myles.ViaVersion.api.Via;
 
 import java.io.IOException;
@@ -148,15 +149,19 @@ public class VersionConnector extends Plugin implements Listener {
             try {
                 rawVersion = Integer.parseInt(versionStr);
             } catch (NumberFormatException e2) {
+                String getVersion = versionStr.toUpperCase().replace('.', '_');
+                if (!getVersion.startsWith("MINECRAFT_")) {
+                    getVersion = "MINECRAFT_" + getVersion;
+                }
                 try {
-                    String getVersion = versionStr.toUpperCase().replace('.', '_');
-                    if (!getVersion.startsWith("MINECRAFT_")) {
-                        getVersion = "MINECRAFT_" + getVersion;
-                    }
                     rawVersion = ProtocolVersion.valueOf(getVersion).toInt();
                 } catch (IllegalArgumentException e1) {
-                    getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
-                    continue;
+                    try {
+                        rawVersion = (int) ProtocolConstants.class.getField(getVersion).get(null);
+                    } catch (IllegalAccessException | NoSuchFieldException e) {
+                        getLogger().warning(versionStr + " is neither a valid Integer nor a string representation of a major protocol version?");
+                        continue;
+                    }
                 }
             }
             String serverStr = section.getString(versionStr, null);
